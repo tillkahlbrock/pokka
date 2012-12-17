@@ -1,0 +1,13 @@
+Player:
+  * join(Table)
+  * leave()
+  * check(amount)
+  * bet(amount)
+  * raise(amount)
+  * fold()
+  
+Table:
+  * init()
+  * send_play_to_next_player()
+  * send_state_to_players()
+  * ban(Player)
