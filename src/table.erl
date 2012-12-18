@@ -25,8 +25,16 @@ join_loop(State) ->
 
 play_loop(State) ->
   send_cards(State#state.players).
-  
+
 send_cards([]) -> true; % Jump to betting loop...
 send_cards([Player|Rest]) ->
-  Player#player.pid ! {pocket_cards, {dh,kk}},
-  send_cards(Rest).
+  MRef = make_ref(),
+  Player#player.pid ! {self(), MRef, {pocket_cards, {dh,kk}}},
+  receive
+    {MRef, ok} ->
+      send_cards(Rest)
+  after 2000 ->
+    mark_inactive(Player)
+  end.
+
+mark_inactive(_Player) -> true. % Not yet implemented ;)
