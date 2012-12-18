@@ -1,22 +1,21 @@
 -module(player).
--export([join/2, bet/1]).
+-export([join/2, wait_for_pocket_cards/0]).
 
 join(TablePid, Name) ->
   MRef = make_ref(),
   TablePid ! {self(), MRef, {join, Name}},
   receive
-    {MRef, ok} -> ok,
-    PocketCards = receive_pocket_cards(),
-    PocketCards
-  after 2000 ->
-    ptimeout
-  end.
-  
-receive_pocket_cards() ->
-  receive
-    {pocket_cards, PocketCards} ->
-      PocketCards
+    {MRef, ok} -> ok
+  after 3000 ->
+    exit(timeout_value)
   end.
 
-bet(Cards) ->
-  io:format("got cards: ~p~n", [Cards]).
+wait_for_pocket_cards() ->
+  receive
+    {Table, MRef, {pocket_cards, Cards}} ->
+      Table ! {MRef, ok},
+      Cards
+  after 30000 ->
+    exit(timeout_value)
+  end.
+
