@@ -11,3 +11,10 @@ Table:
   * send_play_to_next_player()
   * send_state_to_players()
   * ban(Player)
+
+Round:
+  1. player:join(Table, "Somename").
+  2. PocketCards = player:wait_for_pocket_cards(Table).
+  3. GameState = wait_for_turn(Table).
+  4. play(Action).
+  5. Repeat 3. + 4.
