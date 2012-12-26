@@ -1,4 +1,4 @@
--module(table_tests).
+-module(pokka_table_tests).
 -include_lib("eunit/include/eunit.hrl").
 -record(state, {players=[]}).
 -record(player, {name, pid}).

@@ -1,4 +1,4 @@
--module(player).
+-module(pokka_player).
 -export([join/2, close_table/1]).
 
 join(TablePid, Name) -> gen_server:call(TablePid, {join, Name}).
