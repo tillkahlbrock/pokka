@@ -7,7 +7,7 @@
 
 start() -> gen_server:start(?MODULE, #state{}, []).
 
-start_link() -> gen_server:start_link(?MODULE, #state{}, []).
+start_link() -> gen_server:start_link({local,?MODULE}, ?MODULE, #state{}, []).
 
 init(State) -> {ok, State}.
 
