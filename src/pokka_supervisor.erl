@@ -1,10 +1,18 @@
 -module(pokka_supervisor).
 -behaviour(supervisor).
--export([start_link/0]).
+-export([start_link/0, stop/0]).
 -export([init/1]).
 
 start_link() ->
   supervisor:start_link({local,?MODULE}, ?MODULE, []).
+
+stop() ->
+  case whereis(?MODULE) of
+    P when is_pid(P) ->
+      exit(P, kill);
+    _ -> ok
+  end.
+
 
 init([]) ->
   {ok, {

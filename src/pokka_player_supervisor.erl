@@ -1,6 +1,6 @@
 -module(pokka_player_supervisor).
 -behaviour(supervisor).
--export([start_link/0, start_player/1, stop_player/1]).
+-export([start_link/0, start_player/1, kill_player/1]).
 -export([init/1]).
 
 start_link() ->
@@ -19,6 +19,6 @@ start_player(Name) ->
   },
   supervisor:start_child(?MODULE, ChildSpec).
 
-stop_player(Name) ->
+kill_player(Name) ->
   supervisor:terminate_child(?MODULE, Name),
   supervisor:delete_child(?MODULE, Name).
