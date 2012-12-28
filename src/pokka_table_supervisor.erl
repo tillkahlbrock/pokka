@@ -9,7 +9,7 @@ start_link() ->
 
 init([]) ->
   {ok, {
-    {one_for_all, 5, 60},
+    {one_for_one, 5, 60},
     [
       {pokka_table,
       {pokka_table, start_link, []},
