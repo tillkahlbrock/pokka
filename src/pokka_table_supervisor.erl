@@ -5,9 +5,9 @@
 
 
 start_link() ->
-  supervisor:start_link({local,?MODULE}, ?MODULE, normal).
+  supervisor:start_link({local,?MODULE}, ?MODULE, []).
 
-init(normal) ->
+init([]) ->
   {ok, {
     {one_for_all, 5, 60},
     [
