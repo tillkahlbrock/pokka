@@ -15,7 +15,7 @@ start_player(Name) ->
   ChildSpec = {
     Name,
     {pokka_player, start_link, [Name, pokka_table]},
-    temporary, 2000, worker, [pokka_player]
+    transient, 2000, worker, [pokka_player]
   },
   supervisor:start_child(?MODULE, ChildSpec).
 
