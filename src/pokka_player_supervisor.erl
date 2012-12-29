@@ -12,15 +12,13 @@ init([]) ->
   {ok, {{one_for_one, MaxRestart, MaxTime}, []}}.
 
 start_player(Name) ->
-  AtomName = list_to_atom(Name),
   ChildSpec = {
-    AtomName,
-    {pokka_player, start_link, [AtomName, pokka_table]},
+    Name,
+    {pokka_player, start_link, [Name, pokka_table]},
     transient, 2000, worker, [pokka_player]
   },
   supervisor:start_child(?MODULE, ChildSpec).
 
 kill_player(Name) ->
-  AtomName = list_to_atom(Name),
-  supervisor:terminate_child(?MODULE, AtomName),
-  supervisor:delete_child(?MODULE, AtomName).
+  supervisor:terminate_child(?MODULE, Name),
+  supervisor:delete_child(?MODULE, Name).

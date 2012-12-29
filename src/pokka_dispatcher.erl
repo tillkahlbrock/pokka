@@ -19,11 +19,35 @@ handle_cast(accept, [ListenSocket]) ->
   send(AcceptSocket, "Hello you! Wanna play some poker?", []),
   {noreply, [AcceptSocket, join]}.
 
-handle_info({tcp, _Port, Msg}, [Socket, join]) ->
+handle_info({tcp, _Port, Msg = "join "++_}, [Socket, join]) ->
   ["join", Name] = tokens(Msg),
-  ok = pokka:add_player(Name),
-  send(Socket, "Ok ~p, lets gamble!", [Name]),
-  {noreply, [Socket, cards]}.
+  AtomName = list_to_atom(Name),
+  ok = pokka:add_player(AtomName),
+  send(Socket, "Ok ~p, lets gamble!", [AtomName]),
+  {noreply, [Socket, cards, AtomName]};
+
+handle_info({tcp, _Socket, "quit"++_}, State = [Socket, join]) ->
+  gen_tcp:close(Socket),
+  {stop, normal, State};
+
+handle_info({tcp, _Socket, "quit"++_}, State = [Socket, _NextStep, Name]) ->
+  gen_tcp:close(Socket),
+  pokka:kill_player(Name),
+  {stop, normal, State};
+
+handle_info({tcp, _Port, _Msg}, State = [Socket, _NextStep]) ->
+  send(Socket, "You don't know jack!'", []),
+  {noreply, State};
+
+handle_info({tcp_closed, _Socket, _}, State) ->
+  {stop, normal, State};
+
+handle_info({tcp_error, _Socket, _}, State) ->
+  {stop, normal, State};
+
+handle_info(E, State) ->
+  io:format("unexpected: ~p~n", [E]),
+  {noreply, State}.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
