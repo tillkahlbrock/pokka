@@ -9,7 +9,8 @@ stop(_State) ->
   ok.
 
 add_player(Name) ->
-  pokka_player_supervisor:start_player(Name).
+  {ok, _Child} = pokka_player_supervisor:start_player(Name),
+  ok.
 
 kill_player(Name) ->
   pokka_player_supervisor:kill_player(Name).
