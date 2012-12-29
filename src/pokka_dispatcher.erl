@@ -14,17 +14,16 @@ init(Socket) ->
 handle_call(_E, _From, State) ->
   {noreply, State}.
 
-%% Accepting a connection
 handle_cast(accept, [ListenSocket]) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
-  %% Reply to incomming connections here with gen_tcp:send(AcceptSocket, Msg)
-  {noreply, [AcceptSocket]}.
+  send(AcceptSocket, "Hello you! Wanna play some poker?", []),
+  {noreply, [AcceptSocket, join]}.
 
-handle_info({tcp, _Port, Msg}, S = [Socket]) ->
-  Name = Msg, %% Extract name from message here
-  pokka:kill_player(Name),
-  gen_tcp:close(Socket),
-  {stop, normal, S}.
+handle_info({tcp, _Port, Msg}, [Socket, join]) ->
+  ["join", Name] = tokens(Msg),
+  ok = pokka:add_player(Name),
+  send(Socket, "Ok ~p, lets gamble!", [Name]),
+  {noreply, [Socket, cards]}.
 
 code_change(_OldVsn, State, _Extra) ->
     {ok, State}.
@@ -34,3 +33,10 @@ terminate(normal, _State) ->
 
 terminate(_Reason, _State) ->
     io:format("terminate reason: ~p~n", [_Reason]).
+
+send(Socket, Str, Args) ->
+  ok = gen_tcp:send(Socket, io_lib:format(Str++"~n", Args)),
+  ok = inet:setopts(Socket, [{active, once}]),
+  ok.
+
+tokens(String) -> string:tokens(String, "\r\n ").
