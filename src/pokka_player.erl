@@ -20,8 +20,8 @@ handle_cast(accept, [ListenSocket, Table]) ->
   {noreply, [AcceptSocket, join, Table]}.
 
 handle_info({tcp, _Port, Msg = "join "++_}, [Socket, join, Table]) ->
-  ["join", Name] = tokens(Msg),
-  AtomName = list_to_atom(Name),
+  ["join" | Name] = tokens(Msg),
+  AtomName = list_to_atom(string:join(Name, "_")),
   ok = pokka:join_table(Table, AtomName),
   send(Socket, "Ok ~p, lets gamble!", [AtomName]),
   {noreply, [Socket, cards, AtomName, Table]};
