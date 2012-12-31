@@ -19,14 +19,6 @@ init([]) ->
         [pokka_table_supervisor]
       },
       {
-        pokka_player_supervisor,
-        {pokka_player_supervisor, start_link, []},
-        permanent,
-        10000,
-        supervisor,
-        [pokka_player_supervisor]
-      },
-      {
         pokka_dispatcher_supervisor,
         {pokka_dispatcher_supervisor, start_link, []},
         permanent,
