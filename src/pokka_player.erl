@@ -22,7 +22,7 @@ handle_cast(accept, [ListenSocket]) ->
 handle_info({tcp, _Port, Msg = "join "++_}, [Socket, join]) ->
   ["join", Name] = tokens(Msg),
   AtomName = list_to_atom(Name),
-  ok = pokka:add_player(AtomName),
+  ok = pokka:join_table(pokka_table, AtomName),
   send(Socket, "Ok ~p, lets gamble!", [AtomName]),
   {noreply, [Socket, cards, AtomName]};
 
@@ -32,7 +32,7 @@ handle_info({tcp, _Socket, "quit"++_}, State = [Socket, join]) ->
 
 handle_info({tcp, _Socket, "quit"++_}, State = [Socket, _NextStep, Name]) ->
   gen_tcp:close(Socket),
-  pokka:kill_player(Name),
+  pokka:leave_table(pokka_table, Name),
   {stop, normal, State};
 
 handle_info({tcp, _Port, _Msg}, State = [Socket, _NextStep]) ->

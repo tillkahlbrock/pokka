@@ -17,6 +17,12 @@ handle_call({join, Name}, From, State) ->
   NewState = State#state{players=[Player|Players]},
   {reply, ok, NewState};
 
+handle_call({leave, Name}, From, State) ->
+  Player = #player{name=Name, pid=From},
+  Players = lists:delete(Player, State#state.players),
+  NewState = State#state{players=Players},
+  {reply, ok, NewState};
+
 handle_call(terminate, _From, State) -> {stop, normal, ok, State}.
 
 handle_cast(_Message, State) -> {noreply, State}.

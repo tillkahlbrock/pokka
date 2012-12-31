@@ -1,6 +1,6 @@
 -module(pokka).
 -behaviour(application).
--export([start/2, stop/1, add_player/1, kill_player/1]).
+-export([start/2, stop/1, join_table/2, leave_table/2]).
 
 start(normal, _Args) ->
   pokka_supervisor:start_link().
@@ -8,9 +8,10 @@ start(normal, _Args) ->
 stop(_State) ->
   ok.
 
-add_player(Name) ->
-  {ok, _Child} = pokka_player_supervisor:start_player(Name),
+join_table(Table, Name) ->
+  ok = gen_server:call(Table, {join, Name}),
   ok.
 
-kill_player(Name) ->
-  pokka_player_supervisor:kill_player(Name).
+leave_table(Table, Name) ->
+  ok = gen_server:call(Table, {leave, Name}),
+  ok.
