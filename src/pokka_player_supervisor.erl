@@ -1,13 +1,13 @@
 -module(pokka_player_supervisor).
 -behaviour(supervisor).
 
--export([start_link/0, start_socket/0]).
+-export([start_link/1, start_socket/0]).
 -export([init/1]).
 
-start_link() ->
-  supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link(Table) ->
+  supervisor:start_link({local, ?MODULE}, ?MODULE, [Table]).
 
-init([]) ->
+init([Table]) ->
   %{ok, Port} = application:get_env(port),
   Port = 12345,
   {ok, ListenSocket} = gen_tcp:listen(Port, [{active,once}, {packet,line}]),
@@ -18,7 +18,7 @@ init([]) ->
       {simple_one_for_one, 60, 3600},
       [{
         player,
-        {pokka_player, start_link, [ListenSocket]},
+        {pokka_player, start_link, [ListenSocket, Table]},
         temporary, 1000, worker, [pokka_player]
       }]
     }

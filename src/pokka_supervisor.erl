@@ -1,18 +1,18 @@
 -module(pokka_supervisor).
 -behaviour(supervisor).
--export([start_link/0]).
+-export([start_link/1]).
 -export([init/1]).
 
-start_link() ->
-  supervisor:start_link({local,?MODULE}, ?MODULE, []).
+start_link(Table) ->
+  supervisor:start_link({local,?MODULE}, ?MODULE, [Table]).
 
-init([]) ->
+init([Table]) ->
   {ok, {
     {one_for_one, 3, 30},
     [
       {
         pokka_table_supervisor,
-        {pokka_table_supervisor, start_link, []},
+        {pokka_table_supervisor, start_link, [Table]},
         permanent,
         6000,
         supervisor,
@@ -20,7 +20,7 @@ init([]) ->
       },
       {
         pokka_player_supervisor,
-        {pokka_player_supervisor, start_link, []},
+        {pokka_player_supervisor, start_link, [Table]},
         permanent,
         6000,
         supervisor,
