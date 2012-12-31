@@ -1,4 +1,4 @@
--module(pokka_dispatcher_supervisor).
+-module(pokka_player_supervisor).
 -behaviour(supervisor).
 
 -export([start_link/0, start_socket/0]).
@@ -17,9 +17,9 @@ init([]) ->
     {
       {simple_one_for_one, 60, 3600},
       [{
-        dispatcher,
-        {pokka_dispatcher, start_link, [ListenSocket]},
-        temporary, 1000, worker, [pokka_dispatcher]
+        player,
+        {pokka_player, start_link, [ListenSocket]},
+        temporary, 1000, worker, [pokka_player]
       }]
     }
   }.
