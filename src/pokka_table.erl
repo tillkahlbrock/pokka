@@ -11,9 +11,9 @@ start_link(Table) -> gen_server:start_link({local,Table}, ?MODULE, #state{}, [])
 
 init(State) -> {ok, State}.
 
-handle_call({join, Name}, From, State) ->
+handle_call({join, Name, Pid}, _From, State) ->
   Players = State#state.players,
-  Player = #player{name=Name, pid=From},
+  Player = #player{name=Name, pid=Pid},
   NewState = State#state{players=[Player|Players]},
   {reply, ok, NewState};
 
