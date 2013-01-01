@@ -17,7 +17,11 @@ handle_call(_E, _From, State) ->
 handle_cast(accept, [ListenSocket, Table]) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
   send(AcceptSocket, "Hello you! Wanna play some poker?", []),
-  {noreply, [AcceptSocket, join, Table]}.
+  {noreply, [AcceptSocket, join, Table]};
+
+handle_cast({status, Message}, State = [Socket | _]) ->
+  send(Socket, Message, []),
+  {noreply, State}.
 
 handle_info({tcp, _Port, Msg = "join "++_}, [Socket, join, Table]) ->
   ["join" | Name] = tokens(Msg),

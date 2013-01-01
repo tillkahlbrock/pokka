@@ -14,6 +14,7 @@ init(State) -> {ok, State}.
 handle_call({join, Name, Pid}, _From, State) ->
   Players = State#state.players,
   Player = #player{name=Name, pid=Pid},
+  send_all(Players, "status: new player " ++ atom_to_list(Name) ++ " joined"),
   NewState = State#state{players=[Player|Players]},
   {reply, ok, NewState};
 
@@ -32,3 +33,9 @@ handle_info(_Message, State) -> {noreply, State}.
 terminate(normal, State) -> io:format("shutting down. state: ~p~n", [State]).
 
 code_change(_OldVersion, State, _Extra) -> {ok, State}.
+
+send_all([], _Message) -> ok;
+
+send_all([Player|Rest], Message) ->
+  gen_server:cast(Player#player.pid, {status, Message}),
+  send_all(Rest, Message).
