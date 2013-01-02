@@ -9,9 +9,9 @@ stop(_State) ->
   ok.
 
 join_table(Table, Name, PlayerPid) ->
-  ok = gen_server:call(Table, {join, Name, PlayerPid}),
+  ok = gen_fsm:sync_send_event(Table, {join, Name, PlayerPid}),
   ok.
 
 leave_table(Table, Name) ->
-  ok = gen_server:call(Table, {leave, Name}),
+  ok = gen_fsm:sync_send_event(Table, {leave, Name}),
   ok.
