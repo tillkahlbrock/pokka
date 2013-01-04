@@ -1,66 +1,75 @@
 -module(pokka_player).
--behaviour(gen_server).
+-behaviour(gen_fsm).
 -export([start_link/2]).
--export([init/1, handle_call/3, handle_cast/2, handle_info/2, code_change/3, terminate/2]).
+-export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
+-export([startup/2, join/2, cards/2]).
 
 start_link(Socket, Table) ->
-  gen_server:start_link(?MODULE, [Socket, Table], []).
+  gen_fsm:start_link(?MODULE, [Socket, Table], []).
 
-init(State) ->
-  gen_server:cast(self(), accept),
-  {ok, State}.
+init(StateData) ->
+  gen_fsm:send_event(self(), accept),
+  {ok, startup, StateData}.
 
-%% No sync calls needed
-handle_call(_E, _From, State) ->
-  {noreply, State}.
-
-handle_cast(accept, [ListenSocket, Table]) ->
+startup(accept, [ListenSocket, Table]) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
   send(AcceptSocket, "Hello you! Wanna play some poker?", []),
-  {noreply, [AcceptSocket, join, Table]};
+  {next_state, join, [AcceptSocket, Table]}.
 
-handle_cast({status, Message}, State = [Socket | _]) ->
+join(_Msg, StateData) ->
+  {next_state, join, StateData}.
+
+cards(_Msg, StateData) ->
+  {next_state, cards, StateData}.
+
+handle_event({status, Message}, StateName, StateData = [Socket | _]) ->
   send(Socket, Message, []),
-  {noreply, State}.
+  {next_state, StateName, StateData};
 
-handle_info({tcp, _Port, Msg = "join "++_}, [Socket, join, Table]) ->
+handle_event(_E, StateName, StateData) ->
+  {next_state, StateName, StateData}.
+
+handle_sync_event(_E, _From, StateName, StateData) ->
+  {next_state, StateName, StateData}.
+
+handle_info({tcp, _Port, Msg = "join "++_}, join, [Socket, Table]) ->
   ["join" | Name] = tokens(Msg),
   AtomName = list_to_atom(string:join(Name, "_")),
   ok = pokka:join_table(Table, AtomName, self()),
   send(Socket, "Ok ~p, lets gamble!", [AtomName]),
-  {noreply, [Socket, cards, AtomName, Table]};
+  {next_state, cards, [Socket, Table, AtomName]};
 
-handle_info({tcp, _Socket, "quit"++_}, State = [Socket, join, _Table]) ->
+handle_info({tcp, _Socket, "quit"++_}, join, StateData = [Socket, _Table]) ->
   gen_tcp:close(Socket),
-  {stop, normal, State};
+  {stop, normal, StateData};
 
-handle_info({tcp, _Socket, "quit"++_}, State = [Socket, _NextStep, Name, Table]) ->
+handle_info({tcp, _Socket, "quit"++_}, _StateName, StateData = [Socket, Table, Name]) ->
   gen_tcp:close(Socket),
   pokka:leave_table(Table, Name, self()),
-  {stop, normal, State};
+  {stop, normal, StateData};
 
-handle_info({tcp, _Port, _Msg}, State = [Socket | _Rest]) ->
+handle_info({tcp, _Port, _Msg}, StateName, StateData = [Socket | _Rest]) ->
   send(Socket, "You don't know jack!'", []),
-  {noreply, State};
+  {next_state, StateName, StateData};
 
-handle_info({tcp_closed, _Socket, _}, State) ->
-  {stop, normal, State};
+handle_info({tcp_closed, _Socket, _}, _StateName, StateData) ->
+  {stop, tcp_closed, StateData};
 
-handle_info({tcp_error, _Socket, _}, State) ->
-  {stop, normal, State};
+handle_info({tcp_error, _Socket, _}, _StateName, StateData) ->
+  {stop, tcp_error, StateData};
 
-handle_info(E, State) ->
+handle_info(E, StateName, StateData) ->
   io:format("unexpected: ~p~n", [E]),
-  {noreply, State}.
+  {next_state, StateName, StateData}.
 
-code_change(_OldVsn, State, _Extra) ->
-    {ok, State}.
+code_change(_OldVsn, _StateName, StateData, _Extra) ->
+  {ok, StateData}.
 
-terminate(normal, _State) ->
-    ok;
+terminate(normal, _StateName, _StateData) ->
+  ok;
 
-terminate(_Reason, _State) ->
-    io:format("terminate reason: ~p~n", [_Reason]).
+terminate(_Reason, _StateName, _StateData) ->
+  io:format("terminate reason: ~p~n", [_Reason]).
 
 send(Socket, Str, Args) ->
   ok = gen_tcp:send(Socket, io_lib:format(Str++"~n", Args)),

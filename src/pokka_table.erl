@@ -41,5 +41,5 @@ code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 send_all([], _Message) -> ok;
 
 send_all([Player|Rest], Message) ->
-  gen_server:cast(Player#player.pid, {status, Message}),
+  gen_fsm:send_all_state_event(Player#player.pid, {status, Message}),
   send_all(Rest, Message).
