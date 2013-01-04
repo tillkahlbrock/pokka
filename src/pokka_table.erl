@@ -15,17 +15,18 @@ init(State) -> {ok, idle, State}.
 idle({join, Name, Pid}, _From, State) ->
   Players = State#state.players,
   Player = #player{name=Name, pid=Pid},
-  send_all(Players, "status: new player " ++ atom_to_list(Name) ++ " joined"),
   NewState = State#state{players=[Player|Players]},
+  send_all(Players, "status: new player " ++ atom_to_list(Name) ++ " joined the table"),
   {reply, ok, idle, NewState}.
 
-handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
+handle_event({leave, Name, Pid}, StateName, StateData) ->
+  Player = #player{name=Name, pid=Pid},
+  Players = lists:delete(Player, StateData#state.players),
+  NewStateData = StateData#state{players=Players},
+  send_all(Players, "status: player " ++ atom_to_list(Name) ++ " left the table"),
+  {next_state, StateName, NewStateData};
 
-handle_sync_event({leave, Name}, From, StateName, State) ->
-  Player = #player{name=Name, pid=From}, %that isn't working. From is pokka...
-  Players = lists:delete(Player, State#state.players),
-  NewState = State#state{players=Players},
-  {reply, ok, StateName, NewState};
+handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
 handle_sync_event(terminate, _From, _StateName, State) -> {stop, cancelled, ok, State};
 

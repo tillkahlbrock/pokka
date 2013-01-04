@@ -36,7 +36,7 @@ handle_info({tcp, _Socket, "quit"++_}, State = [Socket, join, _Table]) ->
 
 handle_info({tcp, _Socket, "quit"++_}, State = [Socket, _NextStep, Name, Table]) ->
   gen_tcp:close(Socket),
-  pokka:leave_table(Table, Name),
+  pokka:leave_table(Table, Name, self()),
   {stop, normal, State};
 
 handle_info({tcp, _Port, _Msg}, State = [Socket | _Rest]) ->
