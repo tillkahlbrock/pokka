@@ -4,7 +4,6 @@
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2]).
 -record(state, {players=[]}).
--record(player, {name, pid}).
 
 start() -> gen_fsm:start(?MODULE, #state{}, []).
 
@@ -12,9 +11,8 @@ start_link(Table) -> gen_fsm:start_link({local,Table}, ?MODULE, #state{}, []).
 
 init(State) -> {ok, idle, State}.
 
-idle({join, Name, Pid}, State) ->
+idle({join, Player = {Name, _Pid}}, State) ->
   Players = State#state.players,
-  Player = #player{name=Name, pid=Pid},
   NewState = State#state{players=[Player|Players]},
   send_all(Players, "status: new player " ++ atom_to_list(Name) ++ " joined the table"),
   {next_state, idle, NewState, 10000};
@@ -23,8 +21,7 @@ idle(timeout, StateData) ->
   io:format("timeout received. changing to game state"),
   {next_state, game, StateData}.
 
-handle_event({leave, Name, Pid}, StateName, StateData) ->
-  Player = #player{name=Name, pid=Pid},
+handle_event({leave, Player = {Name, _Pid}}, StateName, StateData) ->
   Players = lists:delete(Player, StateData#state.players),
   NewStateData = StateData#state{players=Players},
   send_all(Players, "status: player " ++ atom_to_list(Name) ++ " left the table"),
@@ -44,6 +41,6 @@ code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
 send_all([], _Message) -> ok;
 
-send_all([Player|Rest], Message) ->
-  gen_fsm:send_all_state_event(Player#player.pid, {status, Message}),
+send_all([{_Name, Pid}|Rest], Message) ->
+  gen_fsm:send_all_state_event(Pid, {status, Message}),
   send_all(Rest, Message).

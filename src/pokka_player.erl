@@ -33,11 +33,12 @@ handle_sync_event(_E, _From, StateName, StateData) ->
   {next_state, StateName, StateData}.
 
 handle_info({tcp, _Port, Msg = "join "++_}, join, [Socket, Table]) ->
-  ["join" | Name] = tokens(Msg),
-  AtomName = list_to_atom(string:join(Name, "_")),
-  ok = pokka:join_table(Table, AtomName, self()),
-  send(Socket, "Ok ~p, lets gamble!", [AtomName]),
-  {next_state, cards, [Socket, Table, AtomName]};
+  ["join" | NameString] = tokens(Msg),
+  Name = list_to_atom(string:join(NameString, "_")),
+  Player = {Name, self()},
+  ok = pokka:join_table(Table, Player),
+  send(Socket, "Ok ~p, lets gamble!", [Name]),
+  {next_state, cards, [Socket, Table, Name]};
 
 handle_info({tcp, _Socket, "quit"++_}, join, StateData = [Socket, _Table]) ->
   gen_tcp:close(Socket),
@@ -45,7 +46,8 @@ handle_info({tcp, _Socket, "quit"++_}, join, StateData = [Socket, _Table]) ->
 
 handle_info({tcp, _Socket, "quit"++_}, _StateName, StateData = [Socket, Table, Name]) ->
   gen_tcp:close(Socket),
-  pokka:leave_table(Table, Name, self()),
+  Player = {Name, self()},
+  pokka:leave_table(Table, Player),
   {stop, normal, StateData};
 
 handle_info({tcp, _Port, _Msg}, StateName, StateData = [Socket | _Rest]) ->
