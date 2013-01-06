@@ -1,23 +1,33 @@
 -module(pokka_table_tests).
 -include_lib("eunit/include/eunit.hrl").
 -record(state, {players=[]}).
--record(player, {name, pid}).
+-define(setup(InitStateData, Test), {setup, fun() -> start(InitStateData) end, fun stop/1, fun Test/1}).
 
-handle_call_join_should_add_the_player_to_the_empty_players_list_test_() ->
-  Name = some_name,
-  From = some_pid,
-  InitialState = #state{players=[]},
-  NewState = #state{players=[#player{name=Name,pid=From}]},
-  [?_assertEqual({reply, ok, NewState}, pokka_table:handle_call({join, Name}, From, InitialState))].
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%% TESTS DESCRIPTIONS %%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%
+join_new_player_test_() ->
+  [{"receiving a join message in idle state, adds the name and the pid "
+    "of the new player to the state",
+    ?setup(#state{}, first_join_in_idle_state)}
+  ].
 
-handle_call_terminate_should_return_a_stop_normal_signal_test_() ->
-  [?_assertEqual({stop, normal, ok, state}, pokka_table:handle_call(terminate, from, state))].
+%%%%%%%%%%%%%%%%%%%%%%%
+%%% SETUP FUNCTIONS %%%
+%%%%%%%%%%%%%%%%%%%%%%%
+start(InitStateData) ->
+  pokka_table:start_link(tablename),
+  InitStateData.
 
-handle_cast_should_ignore_any_casts_test_() ->
-  [?_assertEqual({noreply, state},  pokka_table:handle_cast(message, state))].
+stop(_InitStateData) ->
+  gen_fsm:sync_send_all_state_event(tablename, terminate).
 
-handle_info_should_ignore_all_unknown_messages_test_() ->
-  [?_assertEqual({noreply, state},  pokka_table:handle_info(message, state))].
+%%%%%%%%%%%%%%%%%%%%
+%%% ACTUAL TESTS %%%
+%%%%%%%%%%%%%%%%%%%%
 
-code_change_should_do_nothing_test_() ->
-  [?_assertEqual({ok, state},  pokka_table:code_change(oldversion, state, extra))].
+%% Player joins
+first_join_in_idle_state(InitStateData) ->
+  Player = {player1, self()},
+  {_, _, StateData, _} = pokka_table:idle({join, Player}, InitStateData),
+  [?_assertEqual([Player], StateData#state.players)].

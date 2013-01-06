@@ -29,7 +29,7 @@ handle_event({leave, Player = {Name, _Pid}}, StateName, StateData) ->
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
-handle_sync_event(terminate, _From, _StateName, State) -> {stop, cancelled, ok, State};
+handle_sync_event(terminate, _From, _StateName, State) -> {stop, normal, ok, State};
 
 handle_sync_event(_Event, _From, StateName, State) -> {reply, unknown, StateName, State}.
 
