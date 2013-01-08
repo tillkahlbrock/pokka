@@ -55,7 +55,10 @@ send_notification_to_players_on_join(InitStateData) ->
   meck:expect(gen_fsm, send_all_state_event, fun(Pid, Message) -> {ok, Pid, Message} end),
   Player = {player2, ?SOME_PID},
   pokka_table:idle({join, Player}, InitStateData),
-  [?_assert(meck:validate(gen_fsm))].
+  [
+    ?_assert(meck:validate(gen_fsm)),
+    ?_assertNotEqual([], meck:history(gen_fsm))
+  ].
 
 change_to_game_on_timeout_in_idle_state(InitStateData) ->
   Result = pokka_table:idle(timeout, InitStateData),
@@ -68,7 +71,10 @@ remove_player_on_leave(InitStateData = #state{players=[Player1, Player2]}) ->
 send_notification_to_players_on_leave(InitStateData = #state{players=[_Player1, Player2]}) ->
   meck:expect(gen_fsm, send_all_state_event, fun(Pid, Message) -> {ok, Pid, Message} end),
   pokka_table:handle_event({leave, Player2}, some_state, InitStateData),
-  [?_assert(meck:validate(gen_fsm))].
+  [
+    ?_assert(meck:validate(gen_fsm)),
+    ?_assertNotEqual([], meck:history(gen_fsm))
+  ].
 
 stop_after_terminate_message(InitStateData) ->
   Result = pokka_table:handle_sync_event(terminate, sender, some_state, InitStateData),
