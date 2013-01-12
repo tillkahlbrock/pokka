@@ -12,7 +12,7 @@ init(State) -> {ok, idle, State}.
 idle({join, Player = {Name, _Pid}}, State) ->
   Players = State#state.players,
   NewState = State#state{players=[Player|Players]},
-  send_all(Players, "status: new player " ++ atom_to_list(Name) ++ " joined the table"),
+  pokka_notifier:join(Players, Name),
   {next_state, idle, NewState, 10000};
 
 idle(timeout, StateData) ->
