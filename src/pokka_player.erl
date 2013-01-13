@@ -5,10 +5,10 @@
 -export([startup/2, join/2, cards/2]).
 
 start_link(Socket, Table) ->
-  gen_fsm:start_link(?MODULE, [Socket, Table], []).
+  gen_fsm:start_link({local,Table}, ?MODULE, [Socket, Table], []).
 
 init(StateData) ->
-  gen_fsm:send_event(self(), accept),
+  gen_fsm:send_event(?MODULE, accept),
   {ok, startup, StateData}.
 
 startup(accept, [ListenSocket, Table]) ->
