@@ -22,7 +22,7 @@ idle(timeout, StateData) ->
 handle_event({leave, Player = {Name, _Pid}}, StateName, StateData) ->
   Players = lists:delete(Player, StateData#state.players),
   NewStateData = StateData#state{players=Players},
-  send_all(Players, "status: player " ++ atom_to_list(Name) ++ " left the table"),
+  pokka_notifier:leave(Players, Name),
   {next_state, StateName, NewStateData};
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
@@ -36,9 +36,3 @@ handle_info(_Message, StateName, State) -> {next_state, StateName, State}.
 terminate(normal, _StateName, State) -> io:format("shutting down. state: ~p~n", [State]).
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
-
-send_all([], _Message) -> ok;
-
-send_all([{_Name, Pid}|Rest], Message) ->
-  gen_fsm:send_all_state_event(Pid, {status, Message}),
-  send_all(Rest, Message).

@@ -20,8 +20,8 @@ join_new_player_test_() ->
     ?setup(change_to_game_on_timeout_in_idle_state)},
     {"it should remove the player from player list on leave",
     ?setup(#state{players=[{player1, ?SOME_PID}, {player2, ?SOME_PID}]}, remove_player_on_leave)},
-%    {"it should send a notification to the player when a player leaves",
-%    ?setup(#state{players=[{player1, ?SOME_PID}, {player2, ?SOME_PID}]}, send_notification_to_players_on_leave)},
+    {"it should send a notification to the player when a player leaves",
+    ?setup(#state{players=[{player1, ?SOME_PID}, {player2, ?SOME_PID}]}, send_notification_to_players_on_leave)},
     {"it should stop after receiving a terminate message",
     ?setup(stop_after_terminate_message)}
   ].
@@ -32,6 +32,7 @@ join_new_player_test_() ->
 start(InitStateData) ->
   meck:new(pokka_notifier),
   meck:expect(pokka_notifier, join, fun(_PL, _NP) -> ok end),
+  meck:expect(pokka_notifier, leave, fun(_PL, _NP) -> ok end),
   InitStateData.
 
 stop(_InitStateData) ->
@@ -68,13 +69,12 @@ remove_player_on_leave(InitStateData = #state{players=[Player1, Player2]}) ->
   Result = pokka_table:handle_event({leave, Player1}, some_state, InitStateData),
   [?_assertEqual({next_state, some_state, #state{players=[Player2]}}, Result)].
 
-%send_notification_to_players_on_leave(InitStateData = #state{players=[_Player1, Player2]}) ->
-%  meck:expect(gen_fsm, send_all_state_event, fun(Pid, Message) -> {ok, Pid, Message} end),
-%  pokka_table:handle_event({leave, Player2}, some_state, InitStateData),
-%  [
-%    ?_assert(meck:validate(gen_fsm)),
-%    ?_assertNotEqual([], meck:history(gen_fsm))
-%  ].
+send_notification_to_players_on_leave(InitStateData = #state{players=[Player1, Player2 = {LeavingPlayer, _Pid}]}) ->
+  pokka_table:handle_event({leave, Player2}, some_state, InitStateData),
+  [
+    ?_assert(meck:validate(pokka_notifier)),
+    ?_assert(meck:called(pokka_notifier, leave, [[Player1], LeavingPlayer]))
+  ].
 
 stop_after_terminate_message(InitStateData) ->
   Result = pokka_table:handle_sync_event(terminate, sender, some_state, InitStateData),
