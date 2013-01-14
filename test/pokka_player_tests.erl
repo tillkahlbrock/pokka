@@ -34,6 +34,6 @@ send_accept_in_init(InitStateData) ->
   Result = pokka_player:init(InitStateData),
   [
     ?_assert(meck:validate(gen_fsm)),
-    ?_assert(meck:called(gen_fsm, send_event, [pokka_player, accept])),
+    ?_assert(meck:called(gen_fsm, send_event, ['_', accept])),
     ?_assertEqual({ok, startup, InitStateData}, Result)
   ].
