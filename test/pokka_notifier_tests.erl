@@ -32,7 +32,7 @@ send_message_on_leave_test_() ->
 %%%%%%%%%%%%%%%%%%%%%%%
 start(PlayerList) ->
   code:unstick_mod(gen_fsm),
-  meck:new(gen_fsm, [passthrough]),
+  meck:new(gen_fsm),
   PlayerList.
 
 stop(_PlayerList) ->

@@ -8,8 +8,8 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%
 join_new_player_test_() ->
   [
-    {"It should send an async message (accept) to itself in the init funtions, "
-      "so that the first action is to open a accept socket and not to be stuck in init",
+    {"It should send an async message (accept) to itself in the init funtion, "
+      "so that the first action is to open an accept socket and not to be stuck in init",
     ?setup(send_accept_in_init)}
   ].
 
