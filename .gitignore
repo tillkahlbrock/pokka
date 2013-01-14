@@ -1,2 +1,4 @@
-ebin/
+!ebin/
+ebin/*
+!ebin/meck*
 .eunit/
