@@ -47,7 +47,7 @@ stop(_InitStateData) ->
 %%% ACTUAL TESTS %%%
 %%%%%%%%%%%%%%%%%%%%
 
-%% Player joins
+%% Startup phase
 send_accept_in_init(InitStateData) ->
   meck:expect(gen_fsm, send_event, fun(Pid, Message) -> {ok, Pid, Message} end),
   Result = pokka_player:init(InitStateData),
@@ -76,6 +76,7 @@ send_status_to_the_client(InitStateData = [Socket|_]) ->
     ?_assertEqual({next_state, some_state, InitStateData}, Result)
   ].
 
+%% Player joins
 call_join_with_playername(InitStateData = [_Socket, Tablename]) ->
   Playername = "Klaus",
   PlayernameAtom = list_to_atom(Playername),
