@@ -18,7 +18,11 @@ join_new_player_test_() ->
     {"It should call pokka:join_table with the players name",
     ?setup(call_join_with_playername)},
     {"It should send an ack to the client",
-    ?setup(send_ack_to_the_client)}
+    ?setup(send_ack_to_the_client)},
+    {"It should close the socket if the client sends quit",
+    ?setup(close_socket_on_quit)},
+    {"It should close the socket and leave the table if a already join player sends quit",
+    ?setup([socket, table_name, player_name], close_socket_and_leave_on_quit)}
   ].
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -94,4 +98,22 @@ send_ack_to_the_client(InitStateData = [Socket|_]) ->
   [
     ?_assert(meck:validate(gen_tcp)),
     ?_assert(meck:called(gen_tcp, send, [Socket, '_']))
+  ].
+
+close_socket_on_quit(InitStateData = [Socket|_]) ->
+  meck:expect(gen_tcp, close, fun(_S) -> ok end),
+  pokka_player:handle_info({tcp, Socket, "quit"}, join, InitStateData),
+  [
+    ?_assert(meck:validate(gen_tcp)),
+    ?_assert(meck:called(gen_tcp, close, [Socket]))
+  ].
+
+close_socket_and_leave_on_quit(InitStateData = [Socket, Tablename, Playername]) ->
+  meck:expect(gen_tcp, close, fun(_S) -> ok end),
+  meck:expect(pokka, leave_table, fun(_TN, _PN) -> ok end),
+  pokka_player:handle_info({tcp, Socket, "quit"}, some_state, InitStateData),
+  [
+    ?_assert(meck:validate(gen_tcp)),
+    ?_assert(meck:called(gen_tcp, close, [Socket])),
+    ?_assert(meck:called(pokka, leave_table, [Tablename, {Playername, '_'}]))
   ].
