@@ -22,7 +22,9 @@ join_new_player_test_() ->
     {"It should close the socket if the client sends quit",
     ?setup(close_socket_on_quit)},
     {"It should close the socket and leave the table if a already join player sends quit",
-    ?setup([socket, table_name, player_name], close_socket_and_leave_on_quit)}
+    ?setup([socket, table_name, player_name], close_socket_and_leave_on_quit)},
+    {"It should send a notification to the client if it receives a unexpected message",
+    ?setup(send_notification_on_unexpected_message)}
   ].
 
 %%%%%%%%%%%%%%%%%%%%%%%
@@ -36,7 +38,6 @@ start(InitStateData) ->
   meck:new(gen_tcp),
   meck:new(inet),
   meck:new(pokka),
-  meck:expect(gen_tcp, send, fun(_Socket, _Msg) -> ok end),
   meck:expect(gen_tcp, send, fun(_Socket, _Msg) -> ok end),
   meck:expect(inet, setopts, fun(_Socket, _Msg) -> ok end),
   InitStateData.
@@ -102,18 +103,29 @@ send_ack_to_the_client(InitStateData = [Socket|_]) ->
 
 close_socket_on_quit(InitStateData = [Socket|_]) ->
   meck:expect(gen_tcp, close, fun(_S) -> ok end),
-  pokka_player:handle_info({tcp, Socket, "quit"}, join, InitStateData),
+  Result = pokka_player:handle_info({tcp, Socket, "quit"}, join, InitStateData),
   [
     ?_assert(meck:validate(gen_tcp)),
-    ?_assert(meck:called(gen_tcp, close, [Socket]))
+    ?_assert(meck:called(gen_tcp, close, [Socket])),
+    ?_assertEqual({stop, normal, InitStateData}, Result)
   ].
 
 close_socket_and_leave_on_quit(InitStateData = [Socket, Tablename, Playername]) ->
   meck:expect(gen_tcp, close, fun(_S) -> ok end),
   meck:expect(pokka, leave_table, fun(_TN, _PN) -> ok end),
-  pokka_player:handle_info({tcp, Socket, "quit"}, some_state, InitStateData),
+  Result = pokka_player:handle_info({tcp, Socket, "quit"}, some_state, InitStateData),
   [
     ?_assert(meck:validate(gen_tcp)),
     ?_assert(meck:called(gen_tcp, close, [Socket])),
-    ?_assert(meck:called(pokka, leave_table, [Tablename, {Playername, '_'}]))
+    ?_assert(meck:called(pokka, leave_table, [Tablename, {Playername, '_'}])),
+    ?_assertEqual({stop, normal, InitStateData}, Result)
+  ].
+
+send_notification_on_unexpected_message(InitStateData = [Socket|_]) ->
+  State = some_state,
+  Result = pokka_player:handle_info({tcp, some_socket, some_unexpected_message}, State, InitStateData),
+  [
+    ?_assert(meck:validate(gen_tcp)),
+    ?_assert(meck:called(gen_tcp, send, [Socket, io_lib:format("sorry?~n", [])])),
+    ?_assertEqual({next_state, State, InitStateData}, Result)
   ].

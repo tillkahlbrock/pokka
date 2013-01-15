@@ -50,8 +50,8 @@ handle_info({tcp, _Socket, "quit"++_}, _StateName, StateData = [Socket, Table, N
   pokka:leave_table(Table, Player),
   {stop, normal, StateData};
 
-handle_info({tcp, _Port, _Msg}, StateName, StateData = [Socket | _Rest]) ->
-  send(Socket, "You don't know jack!'", []),
+handle_info({tcp, _Socket, _Msg}, StateName, StateData = [Socket | _Rest]) ->
+  send(Socket, "sorry?", []),
   {next_state, StateName, StateData};
 
 handle_info({tcp_closed, _Socket, _}, _StateName, StateData) ->
