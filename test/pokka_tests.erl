@@ -24,12 +24,15 @@ stop(_InitData) ->
 %%% ACTUAL TESTS %%%
 %%%%%%%%%%%%%%%%%%%%
 receive_welcome_message(_InitData) ->
-  Player = 'till',
-  {Socket, Helo} = connect(),
-  GambleMsg = send_join(Socket, Player),
+  {Socket1, Helo} = connect(),
+  GambleMsg = send_join(Socket1, 'till'),
+  {Socket2, _Helo} = connect(),
+  _GambleMsg = send_join(Socket2, 'klaus'),
+  Status = receive_status(),
   [
     ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Helo),
-    ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg)
+    ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg),
+    ?_assertEqual(<<"New player klaus joined.\n">>, Status)
   ].
 
 %%%%%%%%%%%%%%%%%%%
@@ -47,6 +50,12 @@ send_join(Socket, Player) ->
   gen_tcp:send(Socket, io_lib:format("join ~p~n", [Player])),
   GambleMsg = receive
     {tcp,_Socket,M2} -> M2
-    after 2000 -> "received time while waiting for greeting."
+    after 2000 -> "received time while waiting for join ack."
   end,
   GambleMsg.
+
+receive_status() ->
+  receive
+    {tcp,_Socket,Msg = "status:"++_} -> Msg
+    after 2000 -> "received timeout while waiting for status message."
+  end.
