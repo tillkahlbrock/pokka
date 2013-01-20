@@ -14,7 +14,8 @@ integration_test_() ->
 %%% SETUP FUNCTIONS %%%
 %%%%%%%%%%%%%%%%%%%%%%%
 start(_InitData) ->
-  application:start(pokka).
+  application:start(pokka),
+  timer:sleep(3000).
 
 stop(_InitData) ->
   application:stop(pokka).
@@ -23,13 +24,29 @@ stop(_InitData) ->
 %%% ACTUAL TESTS %%%
 %%%%%%%%%%%%%%%%%%%%
 receive_welcome_message(_InitData) ->
-  Host = 'localhost',
-  Port = 12345,
-  {ok, Sock} = gen_tcp:connect(Host, Port, [binary, {packet, 0}]),
-  Message = receive
-    {tcp,Sock,Helo} -> Helo
+  Player = 'till',
+  {Socket, Helo} = connect(),
+  GambleMsg = send_join(Socket, Player),
+  [
+    ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Helo),
+    ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg)
+  ].
+
+%%%%%%%%%%%%%%%%%%%
+%%% TEST HELPER %%%
+%%%%%%%%%%%%%%%%%%%
+connect() ->
+  {ok, Socket} = gen_tcp:connect('localhost', 12345, [binary, {packet, 0}]),
+  Helo = receive
+    {tcp,_Socket,M1} -> M1
     after 2000 -> "received time while waiting for greeting."
   end,
-  [
-    ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Message)
-  ].
+  {Socket, Helo}.
+
+send_join(Socket, Player) ->
+  gen_tcp:send(Socket, io_lib:format("join ~p~n", [Player])),
+  GambleMsg = receive
+    {tcp,_Socket,M2} -> M2
+    after 2000 -> "received time while waiting for greeting."
+  end,
+  GambleMsg.
