@@ -44,7 +44,7 @@ stop(_PlayerList) ->
 
 %% Player joins
 join_no_message_send_on_empty_list(PlayerList) ->
-  meck:expect(gen_fsm, send_event, fun(_Pid, _Message) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_Pid, _Message) -> ok end),
   pokka_notifier:join(PlayerList, some_player),
   [
     ?_assert(meck:validate(gen_fsm)),
@@ -52,27 +52,27 @@ join_no_message_send_on_empty_list(PlayerList) ->
   ].
 
 join_send_message_to_player(PlayerList = [{_Name, Pid}]) ->
-  meck:expect(gen_fsm, send_event, fun(_P, _M) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_P, _M) -> ok end),
   NewPlayer = some_new_player,
   pokka_notifier:join(PlayerList, NewPlayer),
   [
     ?_assert(meck:validate(gen_fsm)),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid, ?join_msg(NewPlayer)]))
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid, ?join_msg(NewPlayer)]))
   ].
 
 join_send_message_to_players(PlayerList = [{_Name1, Pid1}, {_Name2, Pid2}]) ->
-  meck:expect(gen_fsm, send_event, fun(_P, _M) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_P, _M) -> ok end),
   NewPlayer = some_new_player,
   pokka_notifier:join(PlayerList, NewPlayer),
   [
     ?_assert(meck:validate(gen_fsm)),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid1, ?join_msg(NewPlayer)])),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid2, ?join_msg(NewPlayer)]))
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid1, ?join_msg(NewPlayer)])),
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid2, ?join_msg(NewPlayer)]))
   ].
 
 %% Player leaves
 leave_no_message_send_on_empty_list(PlayerList) ->
-  meck:expect(gen_fsm, send_event, fun(_Pid, _Message) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_Pid, _Message) -> ok end),
   pokka_notifier:leave(PlayerList, some_player),
   [
     ?_assert(meck:validate(gen_fsm)),
@@ -80,20 +80,20 @@ leave_no_message_send_on_empty_list(PlayerList) ->
   ].
 
 leave_send_message_to_player(PlayerList = [{_Name, Pid}]) ->
-  meck:expect(gen_fsm, send_event, fun(_P, _M) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_P, _M) -> ok end),
   NewPlayer = some_new_player,
   pokka_notifier:leave(PlayerList, NewPlayer),
   [
     ?_assert(meck:validate(gen_fsm)),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid, ?leave_msg(NewPlayer)]))
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid, ?leave_msg(NewPlayer)]))
   ].
 
 leave_send_message_to_players(PlayerList = [{_Name1, Pid1}, {_Name2, Pid2}]) ->
-  meck:expect(gen_fsm, send_event, fun(_P, _M) -> ok end),
+  meck:expect(gen_fsm, send_all_state_event, fun(_P, _M) -> ok end),
   NewPlayer = some_new_player,
   pokka_notifier:leave(PlayerList, NewPlayer),
   [
     ?_assert(meck:validate(gen_fsm)),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid1, ?leave_msg(NewPlayer)])),
-    ?_assert(meck:called(gen_fsm, send_event, [Pid2, ?leave_msg(NewPlayer)]))
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid1, ?leave_msg(NewPlayer)])),
+    ?_assert(meck:called(gen_fsm, send_all_state_event, [Pid2, ?leave_msg(NewPlayer)]))
   ].

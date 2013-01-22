@@ -32,7 +32,7 @@ receive_welcome_message(_InitData) ->
   [
     ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Helo),
     ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg),
-    ?_assertEqual(<<"New player klaus joined.\n">>, Status)
+    ?_assertEqual(<<"status: new player klaus joined the table\n">>, Status)
   ].
 
 %%%%%%%%%%%%%%%%%%%
@@ -56,6 +56,6 @@ send_join(Socket, Player) ->
 
 receive_status() ->
   receive
-    {tcp,_Socket,Msg = "status:"++_} -> Msg
+    {tcp,_Socket,Msg} -> Msg
     after 2000 -> "received timeout while waiting for status message."
   end.
