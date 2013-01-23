@@ -28,11 +28,14 @@ receive_welcome_message(_InitData) ->
   GambleMsg = send_join(Socket1, 'till'),
   {Socket2, _Helo} = connect(),
   _GambleMsg = send_join(Socket2, 'klaus'),
-  Status = receive_status(),
+  StatusJoin = receive_status(),
+  send_leave(Socket1), %% till leaves
+  StatusLeave = receive_status(),
   [
     ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Helo),
     ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg),
-    ?_assertEqual(<<"status: new player klaus joined the table\n">>, Status)
+    ?_assertEqual(<<"status: new player klaus joined the table\n">>, StatusJoin),
+    ?_assertEqual(<<"status: player till left the table\n">>, StatusLeave)
   ].
 
 %%%%%%%%%%%%%%%%%%%
@@ -53,6 +56,9 @@ send_join(Socket, Player) ->
     after 2000 -> "received time while waiting for join ack."
   end,
   GambleMsg.
+
+send_leave(Socket) ->
+  gen_tcp:send(Socket, io_lib:format("quit~n", [])).
 
 receive_status() ->
   receive
