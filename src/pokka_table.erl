@@ -13,17 +13,18 @@ idle({join, Player = {Name, _Pid}}, State) ->
   Players = State#state.players,
   NewState = State#state{players=[Player|Players]},
   pokka_notifier:join(Players, Name),
-  {next_state, idle, NewState, 10000};
+  {next_state, idle, NewState, 5000};
 
 idle(timeout, StateData) ->
-  io:format("timeout received. changing to game state"),
+  PocketCards = lists:foldl(fun(X,Acc) -> Acc++[{X,{kd,p3}}] end, [], StateData#state.players),
+  pokka_notifier:pocket_cards(PocketCards),
   {next_state, game, StateData}.
 
 handle_event({leave, Player = {Name, _Pid}}, StateName, StateData) ->
   Players = lists:delete(Player, StateData#state.players),
   NewStateData = StateData#state{players=Players},
   pokka_notifier:leave(Players, Name),
-  {next_state, StateName, NewStateData};
+  {next_state, StateName, NewStateData, 5000};
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 

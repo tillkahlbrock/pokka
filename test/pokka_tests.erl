@@ -31,11 +31,13 @@ receive_welcome_message(_InitData) ->
   StatusJoin = receive_status(),
   send_leave(Socket1), %% till leaves
   StatusLeave = receive_status(),
+  PocketCards = receive_pc(),
   [
     ?_assertEqual(<<"Hello you! Wanna play some poker?\n">>, Helo),
     ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg),
     ?_assertEqual(<<"status: new player klaus joined the table\n">>, StatusJoin),
-    ?_assertEqual(<<"status: player till left the table\n">>, StatusLeave)
+    ?_assertEqual(<<"status: player till left the table\n">>, StatusLeave),
+    ?_assertEqual(<<"pocket cards: {kd,p3}\n">>, PocketCards)
   ].
 
 %%%%%%%%%%%%%%%%%%%
@@ -64,4 +66,10 @@ receive_status() ->
   receive
     {tcp,_Socket,Msg} -> Msg
     after 2000 -> "received timeout while waiting for status message."
+  end.
+
+receive_pc() ->
+  receive
+    {tcp,_Socket,Msg} -> Msg
+    after 6000 -> "received timeout while waiting for pocket cards."
   end.
