@@ -17,8 +17,8 @@ join_new_player_test_() ->
     {"it should send a notification to the player when a new player joins",
     ?setup(#state{players=[{player1, ?SOME_PID}]}, send_notification_to_players_on_join)},
     {"it should change the state to game on timeout in idle state",
-    %?setup(change_to_game_on_timeout_in_idle_state)},
-    %{"it should remove the player from player list on leave",
+    ?setup(change_to_game_on_timeout_in_idle_state)},
+    {"it should remove the player from player list on leave",
     ?setup(#state{players=[{player1, ?SOME_PID}, {player2, ?SOME_PID}]}, remove_player_on_leave)},
     {"it should send a notification to the player when a player leaves",
     ?setup(#state{players=[{player1, ?SOME_PID}, {player2, ?SOME_PID}]}, send_notification_to_players_on_leave)},
@@ -62,6 +62,7 @@ send_notification_to_players_on_join(InitStateData = #state{players=PlayerList})
   ].
 
 change_to_game_on_timeout_in_idle_state(InitStateData) ->
+  meck:expect(pokka_notifier, pocket_cards, fun(_PCards) -> ok end),
   Result = pokka_table:idle(timeout, InitStateData),
   [?_assertEqual({next_state, game, InitStateData}, Result)].
 
