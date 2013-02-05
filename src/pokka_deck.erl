@@ -1,13 +1,12 @@
 -module(pokka_deck).
 -behaviour(gen_server).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
--export([start_link/0, pocket_cards/1]).
+-export([start_link/0, pocket_cards/0]).
 
 start_link() -> gen_server:start_link({local,?MODULE}, ?MODULE, [], []).
 
-pocket_cards(Players) ->
-  PocketCards = lists:foldl(fun(Player, Acc) -> Acc++[{Player, gen_server:call(?MODULE, pocket_cards)}] end, [], Players),
-  PocketCards.
+pocket_cards() ->
+  gen_server:call(?MODULE, pocket_cards).
 
 init([]) ->
   Deck = build_deck(),
@@ -15,7 +14,7 @@ init([]) ->
 
 handle_call(pocket_cards, _From, Deck) ->
   [Card1, Card2|RestDeck] = Deck,
-  {reply, {Card1,Card2}, RestDeck}.
+  {reply, [Card1,Card2], RestDeck}.
 
 handle_cast(_Request, Deck) ->
   {noreply, Deck}.

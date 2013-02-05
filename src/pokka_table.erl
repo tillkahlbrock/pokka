@@ -16,8 +16,7 @@ idle({join, Player = {Name, _Pid}}, State) ->
   {next_state, idle, NewState, 5000};
 
 idle(timeout, StateData) ->
-  PocketCards = pokka_deck:pocket_cards(StateData#state.players),
-  pokka_notifier:pocket_cards(PocketCards),
+  pokka_notifier:deal_pocket_cards(StateData#state.players),
   {next_state, game, StateData}.
 
 handle_event({leave, Player = {Name, _Pid}}, StateName, StateData) ->
