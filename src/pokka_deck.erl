@@ -27,11 +27,15 @@ terminate(_Reason, Deck) -> io:format("shutting down. deck: ~p~n", [Deck]).
 code_change(_OldVersion, Deck, _Extra) -> {ok, Deck}.
 
 build_deck() ->
-  Faces = [ace,king,queen,jack,10,9,8,7,6,5,4,3,2],
+  Faces = [ace,king,queen,jack,ten,nine,eight,seven,six,five,four,three,two],
   Colors = [club,spade,heart,diamon],
   lists:flatten(
     lists:foldl(
-      fun(Face,Deck) -> Deck++[lists:foldl(fun(Color,Acc) -> Acc++[{Face,Color}] end, [], Colors)] end,
+      fun(Face,Deck) -> Deck++[lists:foldl(
+        fun(Color,Acc) -> Acc++[{atom_to_list(Face)++atom_to_list(Color)}] end,
+        [],
+        Colors
+        )] end,
       [],
       Faces
     )
