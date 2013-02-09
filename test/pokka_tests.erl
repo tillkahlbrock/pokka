@@ -44,12 +44,22 @@ receive_welcome_message(_InitData) ->
 %%% TEST HELPER %%%
 %%%%%%%%%%%%%%%%%%%
 connect() ->
-  {ok, Socket} = gen_tcp:connect('localhost', 12345, [binary, {packet, 0}]),
+  Socket = con(10),
   Helo = receive
     {tcp,_Socket,M1} -> M1
     after 2000 -> "received time while waiting for greeting."
   end,
   {Socket, Helo}.
+
+con(0) -> exit('cant connect to server');
+
+con(Tries) ->
+  {Status, Socket} = gen_tcp:connect('localhost', 12345, [binary, {packet, 0}]),
+  if
+    Status == ok -> Socket;
+    true -> timer:sleep(1000), con(Tries-1)
+  end.
+
 
 send_join(Socket, Player) ->
   gen_tcp:send(Socket, io_lib:format("join ~p~n", [Player])),
