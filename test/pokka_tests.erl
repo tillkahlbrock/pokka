@@ -37,7 +37,7 @@ receive_welcome_message(_InitData) ->
     ?_assertEqual(<<"Ok till, lets gamble!\n">>, GambleMsg),
     ?_assertEqual(<<"status: new player klaus joined the table\n">>, StatusJoin),
     ?_assertEqual(<<"status: player till left the table\n">>, StatusLeave),
-    ?_assertMatch("pocket cards: XXX "++_, binary_to_list(PocketCards))
+    ?_assertMatch("pocket cards: "++_, binary_to_list(PocketCards))
   ].
 
 %%%%%%%%%%%%%%%%%%%

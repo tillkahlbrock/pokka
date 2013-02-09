@@ -62,7 +62,7 @@ send_notification_to_players_on_join(InitStateData = #state{players=PlayerList})
   ].
 
 change_to_game_on_timeout_in_idle_state(InitStateData) ->
-  meck:expect(pokka_notifier, pocket_cards, fun(_PCards) -> ok end),
+  meck:expect(pokka_notifier, deal_pocket_cards, fun(_Players) -> ok end),
   Result = pokka_table:idle(timeout, InitStateData),
   [?_assertEqual({next_state, game, InitStateData}, Result)].
 

@@ -16,8 +16,8 @@ leave([{_Player, Pid} | Rest], NewPlayer) ->
 deal_pocket_cards(Players) ->
   lists:map(
     fun({_Player, Pid}) ->
-      Cards = pokka_deck:pocket_cards(),
-      gen_fsm:send_all_state_event(Pid, {status, "pocket cards: dudidum"})
+      [{Card1}, {Card2}] = pokka_deck:pocket_cards(),
+      gen_fsm:send_all_state_event(Pid, {status, "pocket cards: "++Card1++", "++Card2})
     end,
     Players
   ),
