@@ -9,7 +9,7 @@ pocket_cards() ->
   gen_server:call(?MODULE, pocket_cards).
 
 init([]) ->
-  Deck = build_deck(),
+  Deck = shuffle(build_deck()),
   {ok, Deck}.
 
 handle_call(pocket_cards, _From, Deck) ->
@@ -40,3 +40,6 @@ build_deck() ->
       Faces
     )
   ).
+
+shuffle(Deck) ->
+  [X||{_,X} <- lists:sort([ {random:uniform(), N} || N <- Deck])].
