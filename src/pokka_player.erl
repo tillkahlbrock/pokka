@@ -16,8 +16,12 @@ startup(accept, [ListenSocket, Table]) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
   Name = 'some body',
   Player = {Name, self()},
-  ok = pokka:join_table(Table, Player),
+  pokka:join_table(Table, Player),
   {next_state, join, #state{socket=AcceptSocket, name=Name, table=Table}}.
+
+handle_event({message, Message}, StateName, StateData) ->
+  io:format("~p", [Message]),
+  {next_state, StateName, StateData};
 
 handle_event(_E, StateName, StateData) ->
   {next_state, StateName, StateData}.

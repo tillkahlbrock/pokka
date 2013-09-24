@@ -10,10 +10,9 @@ start_link(Table) -> gen_fsm:start_link({local,Table}, ?MODULE, #state{}, []).
 init(State) -> {ok, idle, State}.
 
 idle({join, Player = {Name, _Pid}}, State) ->
-  Players = State#state.players,
-  AllPlayers = [Player|Players],
+  AllPlayers = [Player|State#state.players],
   send(AllPlayers, 'New player  ~p has joined.~n', [Name]),
-  {next_state, idle, State#state{players=AllPlayers}, 5000}.
+  {next_state, idle, State#state{players=AllPlayers}}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
@@ -30,5 +29,5 @@ code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 send([], _Str, _Args) -> ok;
 
 send([{_Name, Pid}|Rest], Str, Args) ->
-  gen_server:cast(Pid, io:format(Str, Args)),
+  gen_server:send_all_state_event(Pid, {message, io_lib:format(Str, Args)}),
   send(Rest, Str, Args).
