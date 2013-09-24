@@ -11,7 +11,7 @@ init(State) -> {ok, idle, State}.
 
 idle({join, Player = {Name, _Pid}}, State) ->
   AllPlayers = [Player|State#state.players],
-  send(AllPlayers, 'New player  ~p has joined.~n', [Name]),
+  send(AllPlayers, 'New player ~p has joined.~n', [Name]),
   {next_state, idle, State#state{players=AllPlayers}}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
@@ -22,12 +22,12 @@ handle_sync_event(_Event, _From, StateName, State) -> {reply, unknown, StateName
 
 handle_info(_Message, StateName, State) -> {next_state, StateName, State}.
 
-terminate(normal, _StateName, State) -> io:format("shutting down. state: ~p~n", [State]).
+terminate(_Reason, _StateName, State) -> io:format("shutting down. state: ~p~n", [State]).
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
 send([], _Str, _Args) -> ok;
 
 send([{_Name, Pid}|Rest], Str, Args) ->
-  gen_server:send_all_state_event(Pid, {message, io_lib:format(Str, Args)}),
+  gen_fsm:send_all_state_event(Pid, {message, io_lib:format(Str, Args)}),
   send(Rest, Str, Args).
