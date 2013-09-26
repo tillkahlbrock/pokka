@@ -1,11 +1,11 @@
 -module(pokka_table).
 -behaviour(gen_fsm).
--export([start_link/1]).
+-export([start_link/2]).
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2]).
 -record(state, {players=[]}).
 
-start_link(Table) -> gen_fsm:start_link({local,Table}, ?MODULE, #state{}, []).
+start_link(Table, Players) -> gen_fsm:start_link({local,Table}, ?MODULE, #state{players=Players}, []).
 
 init(State) -> {ok, idle, State}.
 

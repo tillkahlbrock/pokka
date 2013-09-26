@@ -5,14 +5,14 @@
 
 
 start_link(Table) ->
-  supervisor:start_link({local,?MODULE}, ?MODULE, [Table]).
+  supervisor:start_link({local,?MODULE}, ?MODULE, [Table, []]).
 
-init([Table]) ->
+init(TableInitState) ->
   {ok, {
     {one_for_one, 5, 60},
     [
       {pokka_table,
-      {pokka_table, start_link, [Table]},
+      {pokka_table, start_link, TableInitState},
       permanent,
       5000,
       worker,

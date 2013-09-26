@@ -20,7 +20,7 @@ startup(accept, [ListenSocket, Table]) ->
   {next_state, join, #state{socket=AcceptSocket, name=Name, table=Table}}.
 
 handle_event({message, Message}, StateName, StateData) ->
-  io:format("~p", [Message]),
+  send(StateData#state.socket, Message),
   {next_state, StateName, StateData};
 
 handle_event(_E, StateName, StateData) ->
@@ -36,5 +36,8 @@ handle_info(E, StateName, StateData) ->
 code_change(_OldVsn, _StateName, StateData, _Extra) ->
   {ok, StateData}.
 
-terminate(_Reason, _StateName, _StateData) ->
-  io:format("terminate reason: ~p~n", [_Reason]).
+terminate(Reason, _StateName, _StateData) ->
+  io:format("terminate reason: ~p~n", [Reason]).
+
+send(Socket, Message) ->
+  gen_tcp:send(Socket, Message).
