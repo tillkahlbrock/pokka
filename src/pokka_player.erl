@@ -29,6 +29,12 @@ handle_event(_E, StateName, StateData) ->
 handle_sync_event(_E, _From, StateName, StateData) ->
   {next_state, StateName, StateData}.
 
+handle_info({tcp_closed, _Socket}, _StateName, S) ->
+  {stop, normal, S};
+
+handle_info({tcp_error, _Socket, _}, _StateName, S) ->
+  {stop, normal, S};
+
 handle_info(E, StateName, StateData) ->
   io:format("unexpected: ~p~n", [E]),
   {next_state, StateName, StateData}.
