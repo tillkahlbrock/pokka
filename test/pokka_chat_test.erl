@@ -2,8 +2,12 @@
 -module(pokka_chat_test).
 -author("till").
 
--export([simple_test/0]).
+-export([run_test/0]).
 
-simple_test() ->
+run_test() ->
+  passed = player_joined_test().
+
+player_joined_test() ->
   ok = application:start(pokka),
-  <<"New player 'some body' has joined.\n">> = pokka_test_player:start().
+  <<"New player 'some body' has joined.\n">> = pokka_test_player:start(),
+  passed.
