@@ -14,10 +14,7 @@ init(StateData) ->
 
 startup(accept, [ListenSocket, Table]) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
-  Name = 'some body',
-  Player = {Name, self()},
-  pokka:join_table(Table, Player),
-  {next_state, join, #state{socket=AcceptSocket, name=Name, table=Table}}.
+  {next_state, join, #state{socket=AcceptSocket, table=Table}}.
 
 handle_event({message, Message}, StateName, StateData) ->
   send(StateData#state.socket, Message),
@@ -28,6 +25,13 @@ handle_event(_E, StateName, StateData) ->
 
 handle_sync_event(_E, _From, StateName, StateData) ->
   {next_state, StateName, StateData}.
+
+handle_info({tcp, _Port, Msg = "JOIN "++_}, _State, StateData) ->
+  ["JOIN" | NameString] = tokens(Msg),
+  Name = list_to_atom(string:join(NameString, "_")),
+  Player = {Name, self()},
+  ok = pokka:join_table(StateData#state.table, Player),
+  {next_state, cards, #state{socket=StateData#state.socket, table=StateData#state.table, name=Name}};
 
 handle_info({tcp_closed, _Socket}, _StateName, S) ->
   {stop, normal, S};
@@ -47,3 +51,5 @@ terminate(Reason, _StateName, _StateData) ->
 
 send(Socket, Message) ->
   gen_tcp:send(Socket, Message).
+
+tokens(String) -> string:tokens(String, "\r\n ").

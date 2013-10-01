@@ -9,8 +9,9 @@ run_test() ->
 
 player_joined_test() ->
   ok = application:start(pokka),
-  spawn(pokka_test_player, start, [self()]),
-  ExpectedMessage = <<"New player 'some body' has joined.\n">>,
+  PlayerName = "a player name",
+  ExpectedMessage = <<"New player '\"a_player_name\"' has joined.\n">>,
+  spawn(pokka_test_player, start, [self(), PlayerName]),
   ok = assert_messages_received(ExpectedMessage),
   passed.
 
