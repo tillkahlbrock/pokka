@@ -1,18 +1,29 @@
-%% Copyright
 -module(pokka_chat_test).
--author("till").
-
 -export([run_test/0]).
 
-run_test() ->
-  passed = player_joined_test().
 
-player_joined_test() ->
+run_test() ->
+  passed = player_joined(),
+  passed = second_player_joined().
+
+player_joined() ->
   ok = application:start(pokka),
   PlayerName = "a player name",
   ExpectedMessage = <<"New player '\"a_player_name\"' has joined.\n">>,
   spawn(pokka_test_player, start, [self(), PlayerName]),
   ok = assert_messages_received(ExpectedMessage),
+  ok = application:stop(pokka),
+  passed.
+
+second_player_joined() ->
+  ok = application:start(pokka),
+  PlayerName1 = "a player name",
+  PlayerName2 = "another player name",
+  ExpectedMessage = <<"New player '\"a_player_name\"' has joined.\nNew player '\"another_player_name\"' has joined.\n">>,
+  spawn(pokka_test_player, start, [self(), PlayerName1]),
+  spawn(pokka_test_player, start, [PlayerName2]),
+  ok = assert_messages_received(ExpectedMessage),
+  ok = application:stop(pokka),
   passed.
 
 %% Helper
