@@ -3,15 +3,16 @@
 
 
 run_test() ->
-  passed = player_joined(),
-  passed = second_player_joined().
+  passed = player_joined().
+  %%passed = second_player_joined().
 
 player_joined() ->
   ok = application:start(pokka),
-  PlayerName = "a player name",
-  ExpectedMessage = <<"New player '\"a_player_name\"' has joined.\n">>,
-  spawn(pokka_test_player, start, [self(), PlayerName]),
-  ok = assert_messages_received(ExpectedMessage),
+  PlayerName = "Peter",
+  spawn(pokka_test_player, start, [PlayerName]),
+  timer:sleep(1000),
+  [History|_R] = pokka:history(),
+  "New player Peter has joined.\n" = History,
   ok = application:stop(pokka),
   passed.
 

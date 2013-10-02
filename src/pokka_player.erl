@@ -28,7 +28,7 @@ handle_sync_event(_E, _From, StateName, StateData) ->
 
 handle_info({tcp, _Port, Msg = "JOIN "++_}, _State, StateData) ->
   ["JOIN" | NameString] = tokens(Msg),
-  Name = list_to_atom(string:join(NameString, "_")),
+  Name = string:join(NameString, "_"),
   Player = {Name, self()},
   ok = pokka:join_table(StateData#state.table, Player),
   {next_state, cards, #state{socket=StateData#state.socket, table=StateData#state.table, name=Name}};

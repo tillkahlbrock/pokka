@@ -5,8 +5,7 @@
 
 start(PlayerName) ->
   {ok, Socket} = gen_tcp:connect('localhost', 12345, [binary, {packet, 0}]),
-  timer:sleep(1000),
-  Message = io_lib:format("JOIN ~p~n", [PlayerName]),
+  Message = "JOIN " ++ PlayerName ++ "\n",
   ok = gen_tcp:send(Socket, Message),
   ok.
 
