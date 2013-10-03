@@ -22,7 +22,6 @@ second_player_joined() ->
   spawn(pokka_test_player, start, [("Ernie")]),
   ExpectedMessage = [
     "New player Bert has joined.\n",
-    "New player Ernie has joined.\n",
     "New player Ernie has joined.\n"
   ],
   timer:sleep(1000),
