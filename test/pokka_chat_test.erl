@@ -10,8 +10,7 @@ player_joined() ->
   ok = application:start(pokka),
   spawn(pokka_test_player, start, [("Peter")]),
   timer:sleep(1000),
-  [History|_R] = pokka:history(),
-  "New player Peter has joined.\n" = History,
+  ["New player Peter has joined.\n"] = pokka:history(),
   ok = application:stop(pokka),
   passed.
 
@@ -20,11 +19,10 @@ second_player_joined() ->
   spawn(pokka_test_player, start, [("Bert")]),
   timer:sleep(1000),
   spawn(pokka_test_player, start, [("Ernie")]),
-  ExpectedMessage = [
+  timer:sleep(1000),
+  [
     "New player Bert has joined.\n",
     "New player Ernie has joined.\n"
-  ],
-  timer:sleep(1000),
-  ExpectedMessage = pokka:history(),
+  ] = pokka:history(),
   ok = application:stop(pokka),
   passed.
