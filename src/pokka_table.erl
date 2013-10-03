@@ -13,7 +13,7 @@ idle({join, Player = {Name, _Pid}}, State) ->
   AllPlayers = [Player|State#state.players],
   Message = "New player " ++ Name ++ " has joined.\n",
   MessagesSend = send(AllPlayers, Message),
-  {next_state, idle, State#state{players=AllPlayers, messages=MessagesSend}}.
+  {next_state, idle, State#state{players=AllPlayers, messages=State#state.messages ++ MessagesSend}}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
@@ -35,7 +35,6 @@ send(Recipients, Str) ->
 
 send([], _Str, SendMessages) -> lists:reverse(SendMessages);
 
-send([{_Name, Pid}|Rest], Str, SendMessages) ->
-  Message = Str,
+send([{_Name, Pid}|Rest], Message, SendMessages) ->
   gen_fsm:send_all_state_event(Pid, {message, Message}),
-  send(Rest, Str, [Message|SendMessages]).
+  send(Rest, Message, [Message|SendMessages]).
