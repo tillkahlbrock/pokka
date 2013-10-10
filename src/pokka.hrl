@@ -1,0 +1,3 @@
+-record(player, {name, pid}).
+-record(player_state, {socket, name, table}).
+-record(table_state, {players = [], messages = []}).

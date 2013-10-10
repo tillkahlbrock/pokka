@@ -1,34 +1,35 @@
 -module(pokka_table).
 -behaviour(gen_fsm).
+-include("pokka.hrl").
+
 -export([start_link/2]).
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2]).
--record(state, {players = [], messages = []}).
 
-start_link(Table, Players) -> gen_fsm:start_link({local, Table}, ?MODULE, #state{players = Players}, []).
+start_link(Table, Players) -> gen_fsm:start_link({local, Table}, ?MODULE, #table_state{players = Players}, []).
 
 init(State) -> {ok, idle, State}.
 
-idle({join, Player = {Name, _Pid}}, State) ->
-  AllPlayers = [Player|State#state.players],
-  Message = "New player " ++ Name ++ " has joined.\n",
-  ok = sendToPlayers(AllPlayers, Message),
-  NewState = State#state{players = AllPlayers, messages = State#state.messages ++ [Message]},
+idle({join, Player = #player{name=Name}}, State) ->
+  AllPlayers = [Player|State#table_state.players],
+  Info = "New player " ++ Name ++ " has joined.\n",
+  ok = sendInfo(Info, AllPlayers),
+  NewState = State#table_state{players = AllPlayers},
   case length(AllPlayers) of
     Length when Length >= 2 -> {next_state, idle, NewState, 3000};
     _ -> {next_state, idle, NewState}
   end;
 
 idle(timeout, StateData) ->
-  AllPlayers = StateData#state.players,
+  AllPlayers = StateData#table_state.players,
   Messages = deal_pocket_cards(AllPlayers),
-  NewStateData = StateData#state{players = AllPlayers, messages = StateData#state.messages ++ [Messages]},
+  NewStateData = StateData#table_state{players = AllPlayers, messages = StateData#table_state.messages ++ [Messages]},
   {next_state, game, NewStateData}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
 handle_sync_event(history, _From, StateName, State) ->
-  {reply, State#state.messages, StateName, State};
+  {reply, State#table_state.messages, StateName, State};
 
 handle_sync_event(terminate, _From, _StateName, State) -> {stop, normal, ok, State};
 
@@ -45,11 +46,14 @@ deal_pocket_cards(Players) ->
   lists:foreach(fun({Player, Message}) -> sendToPlayer(Player, Message) end, PlayerMessages),
   lists:map(fun({_Player, Message}) -> Message end, PlayerMessages).
 
-sendToPlayers([], _Message) -> ok;
-
-sendToPlayers([Player|Rest], Message) ->
-  sendToPlayer(Player, Message),
-  sendToPlayers(Rest, Message).
-
 sendToPlayer({_Name, Pid}, Message) ->
   gen_fsm:send_all_state_event(Pid, {message, Message}).
+
+sendCommand(Command, Recipient) ->
+  Recipient ! Command.
+
+sendInfo(_Info, []) -> ok;
+
+sendInfo(Info, [#player{pid=Pid}|Players]) ->
+  Pid ! Info,
+  sendInfo(Info, Players).
