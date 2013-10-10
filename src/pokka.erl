@@ -15,4 +15,4 @@ leave_table(Table, Player) ->
   gen_fsm:send_all_state_event(Table, {leave, Player}).
 
 history() ->
-  gen_fsm:sync_send_all_state_event(pokka_table, get_all_messages).
+  gen_fsm:sync_send_all_state_event(pokka_table, history).
