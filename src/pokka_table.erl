@@ -13,7 +13,7 @@ init(State) -> {ok, idle, State}.
 idle({join, Player = #player{name=Name}}, StateData) ->
   AllPlayers = [Player|StateData#table_state.players],
   Info = "New player " ++ Name ++ " has joined.\n",
-  ok = sendInfo(Info, AllPlayers),
+  ok = send_info(Info, AllPlayers),
   NewStateData = StateData#table_state{players = AllPlayers},
   case length(AllPlayers) of
     Length when Length >= 2 ->
@@ -44,13 +44,13 @@ code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
 deal_pocket_cards({{Card1}, {Card2}}, Players) ->
   Message = "POCKETCARDS {" ++ Card1 ++ ", " ++ Card2 ++ "}",
-  ok = sendInfo(Message, Players).
+  ok = send_info(Message, Players).
 
-sendCommand(Command, Recipient) ->
+send_command(Command, Recipient) ->
   Recipient ! Command.
 
-sendInfo(_Info, []) -> ok;
+send_info(_Info, []) -> ok;
 
-sendInfo(Info, [#player{pid=Pid}|Players]) ->
+send_info(Info, [#player{pid=Pid}|Players]) ->
   gen_server:cast(Pid, {info, Info}),
-  sendInfo(Info, Players).
+  send_info(Info, Players).
