@@ -2,6 +2,9 @@
 -behaviour(gen_fsm).
 -include("pokka.hrl").
 
+-define(MIN_PLAYERS, 2).
+-define(TIMEOUT, 3000).
+
 -export([start_link/2]).
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2]).
@@ -10,14 +13,14 @@ start_link(Table, Players) -> gen_fsm:start_link({local, Table}, ?MODULE, #table
 
 init(State) -> {ok, idle, State}.
 
-idle({join, Player = #player{name=Name}}, StateData) ->
-  AllPlayers = [Player|StateData#table_state.players],
+idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Players}) ->
+  AllPlayers = [Player|Players],
   Info = "New player " ++ Name ++ " has joined.\n",
   ok = send_info(Info, AllPlayers),
   NewStateData = StateData#table_state{players = AllPlayers},
   case length(AllPlayers) of
-    Length when Length >= 2 ->
-      {next_state, idle, NewStateData, 3000};
+    Length when Length >= ?MIN_PLAYERS ->
+      {next_state, idle, NewStateData, ?TIMEOUT};
     _ ->
       {next_state, idle, NewStateData}
   end;
