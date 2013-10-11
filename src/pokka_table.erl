@@ -55,5 +55,5 @@ sendCommand(Command, Recipient) ->
 sendInfo(_Info, []) -> ok;
 
 sendInfo(Info, [#player{pid=Pid}|Players]) ->
-  Pid ! Info,
+  gen_server:cast(Pid, {info, Info}),
   sendInfo(Info, Players).
