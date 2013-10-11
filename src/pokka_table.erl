@@ -10,21 +10,22 @@ start_link(Table, Players) -> gen_fsm:start_link({local, Table}, ?MODULE, #table
 
 init(State) -> {ok, idle, State}.
 
-idle({join, Player = #player{name=Name}}, State) ->
-  AllPlayers = [Player|State#table_state.players],
+idle({join, Player = #player{name=Name}}, StateData) ->
+  AllPlayers = [Player|StateData#table_state.players],
   Info = "New player " ++ Name ++ " has joined.\n",
   ok = sendInfo(Info, AllPlayers),
-  NewState = State#table_state{players = AllPlayers},
+  NewStateData = StateData#table_state{players = AllPlayers},
   case length(AllPlayers) of
-    Length when Length >= 2 -> {next_state, idle, NewState, 3000};
-    _ -> {next_state, idle, NewState}
+    Length when Length >= 2 ->
+      {next_state, idle, NewStateData, 3000};
+    _ ->
+      {next_state, idle, NewStateData}
   end;
 
-idle(timeout, StateData) ->
-  AllPlayers = StateData#table_state.players,
-  Messages = deal_pocket_cards(AllPlayers),
-  NewStateData = StateData#table_state{players = AllPlayers, messages = StateData#table_state.messages ++ [Messages]},
-  {next_state, game, NewStateData}.
+idle(timeout, StateData = #table_state{players=Players}) ->
+  {ok, PocketCards} = gen_server:call(pokka_deck, pocket_cards),
+  deal_pocket_cards(PocketCards, Players),
+  {next_state, game, StateData}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
@@ -41,13 +42,9 @@ terminate(_Reason, _StateName, State) -> io:format("shutting down. state: ~p~n",
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
-deal_pocket_cards(Players) ->
-  PlayerMessages = [{Player, "CARDS " ++ Name ++ "{CC,BB}\n"} || Player = {Name, _Pid} <- Players],
-  lists:foreach(fun({Player, Message}) -> sendToPlayer(Player, Message) end, PlayerMessages),
-  lists:map(fun({_Player, Message}) -> Message end, PlayerMessages).
-
-sendToPlayer({_Name, Pid}, Message) ->
-  gen_fsm:send_all_state_event(Pid, {message, Message}).
+deal_pocket_cards({{Card1}, {Card2}}, Players) ->
+  Message = "POCKETCARDS {" ++ Card1 ++ ", " ++ Card2 ++ "}",
+  ok = sendInfo(Message, Players).
 
 sendCommand(Command, Recipient) ->
   Recipient ! Command.
