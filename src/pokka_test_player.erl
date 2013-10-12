@@ -145,8 +145,16 @@ handle_sync_event(_Event, _From, StateName, State) ->
 %%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
+handle_info({tcp, _Port, Msg = "POCKETCARDS" ++ _}, StateName, State) ->
+  io:format("Pocketcards: ~s~n", [Msg]),
+  {next_state, StateName, State};
+
+
+handle_info({tcp_closed, _Port, _Msg}, _StateName, State) ->
+  {stop, normal, State};
+
 handle_info({tcp, _Port, Msg}, StateName, State) ->
-  erlang:display("got: " ++ Msg),
+  io:format("I got: ~s~n", [Msg]),
   {next_state, StateName, State}.
 
 %%--------------------------------------------------------------------
