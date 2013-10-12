@@ -78,7 +78,7 @@ handle_cast(accept, State = #player_state{socket=ListenSocket}) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
   {noreply, State#player_state{socket=AcceptSocket}};
 
-handle_cast({info, Message}, State = #player_state{socket=Socket}) ->
+handle_cast({_Type, Message}, State = #player_state{socket=Socket}) ->
   send(Socket, Message),
   {noreply, State};
 

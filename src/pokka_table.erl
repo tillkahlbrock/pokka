@@ -26,8 +26,7 @@ idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Playe
   end;
 
 idle(timeout, StateData = #table_state{players=Players}) ->
-  {ok, PocketCards} = gen_server:call(pokka_deck, pocket_cards),
-  deal_pocket_cards(PocketCards, Players),
+  deal_pocket_cards(Players),
   {next_state, game, StateData}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
@@ -45,12 +44,16 @@ terminate(_Reason, _StateName, State) -> io:format("shutting down. state: ~p~n",
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
-deal_pocket_cards({{Card1}, {Card2}}, Players) ->
-  Message = "POCKETCARDS {" ++ Card1 ++ ", " ++ Card2 ++ "}",
-  ok = send_info(Message, Players).
+deal_pocket_cards([]) -> ok;
 
-send_command(Command, Recipient) ->
-  Recipient ! Command.
+deal_pocket_cards([Player|Players]) ->
+  {ok, {{Card1}, {Card2}}} = gen_server:call(pokka_deck, pocket_cards),
+  Message = "POCKETCARDS {" ++ Card1 ++ ", " ++ Card2 ++ "}",
+  ok = send_command(Message, Player),
+  deal_pocket_cards(Players).
+
+send_command(Command, #player{pid=Pid}) ->
+  gen_server:cast(Pid, {command, Command}).
 
 send_info(_Info, []) -> ok;
 
