@@ -54,6 +54,7 @@ start_link(Name) ->
 init([Name]) ->
   Socket = connect(),
   send(Socket, "JOIN " ++ Name ++ "\n"),
+  io:format("I send: JOIN ~s~n", [Name]),
   {ok, state_name, #state{}}.
 
 %%--------------------------------------------------------------------
