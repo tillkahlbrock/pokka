@@ -96,8 +96,9 @@ handle_cast(_Msg, State) ->
 %%                                   {stop, Reason, State}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({tcp, _Port, Msg = "JOIN "++_}, StateData) ->
-  Name = extract_name_from_message(Msg),
+handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
+  Name = extract_name_from_message(Message),
+  io:format("~p: ~p~n", [Name, Message]),
   gen_fsm:send_event(StateData#player_state.table, {join, #player{name=Name, pid=self()}}),
   {noreply, #player_state{socket=StateData#player_state.socket, table=StateData#player_state.table, name=Name}};
 

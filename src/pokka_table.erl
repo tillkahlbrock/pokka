@@ -52,11 +52,13 @@ deal_pocket_cards([Player|Players]) ->
   ok = send_command(Message, Player),
   deal_pocket_cards(Players).
 
-send_command(Command, #player{pid=Pid}) ->
-  gen_server:cast(Pid, {command, Command}).
+send_command(Command, #player{pid=Pid, name=Name}) ->
+  gen_server:cast(Pid, {command, Command}),
+  io:format("COMMAND -> ~p: ~p~n",[Name, Command]).
 
 send_info(_Info, []) -> ok;
 
-send_info(Info, [#player{pid=Pid}|Players]) ->
+send_info(Info, [#player{pid=Pid, name=Name}|Players]) ->
   gen_server:cast(Pid, {info, Info}),
+  io:format("INFO -> ~p: ~p~n",[Name, Info]),
   send_info(Info, Players).
