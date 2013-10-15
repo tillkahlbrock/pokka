@@ -150,6 +150,8 @@ handle_info({tcp, _Port, Msg = "POCKETCARDS" ++ _}, StateName, State) ->
   io:format("Pocketcards: ~s~n", [Msg]),
   {next_state, StateName, State};
 
+handle_info(stop, _StateName, State) ->
+  {stop, normal, State};
 
 handle_info({tcp_closed, _Port, _Msg}, _StateName, State) ->
   {stop, normal, State};

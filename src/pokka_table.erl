@@ -44,7 +44,7 @@ handle_sync_event(_Event, _From, StateName, State) -> {reply, unknown, StateName
 
 handle_info(_Message, StateName, State) -> {next_state, StateName, State}.
 
-terminate(_Reason, _StateName, State) -> io:format("shutting down. state: ~p~n", [State]).
+terminate(_Reason, _StateName, _State) -> log("Table: Shutting down...").
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
