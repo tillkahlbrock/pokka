@@ -7,6 +7,7 @@ TODO
 ----
 
  * Define the protocol
+ * kill the test detached processes
  * Implement the game
     * ~~Join a table (with username)~~
     * ~~Start a game when at least 2 players joined~~
