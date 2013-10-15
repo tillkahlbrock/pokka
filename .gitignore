@@ -2,3 +2,4 @@
 ebin/*
 !ebin/meck*
 .eunit/
+*.dump
