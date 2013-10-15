@@ -98,7 +98,7 @@ handle_cast(_Msg, State) ->
 %%--------------------------------------------------------------------
 handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
   Name = extract_name_from_message(Message),
-  io:format("~p: ~p~n", [Name, Message]),
+  log(Name ++ ": " ++ Message),
   gen_fsm:send_event(StateData#player_state.table, {join, #player{name=Name, pid=self()}}),
   {noreply, #player_state{socket=StateData#player_state.socket, table=StateData#player_state.table, name=Name}};
 
@@ -143,3 +143,6 @@ extract_name_from_message(Msg) ->
   ["JOIN" | NameString] = tokens(Msg),
   Name = string:join(NameString, "_"),
   Name.
+
+log(Message) ->
+  file:write_file(?LOG_FILE, io_lib:fwrite("~p.\n", [Message]), [append]).

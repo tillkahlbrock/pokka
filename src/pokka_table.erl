@@ -9,7 +9,11 @@
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2]).
 
-start_link(Table, Players) -> gen_fsm:start_link({local, Table}, ?MODULE, #table_state{players = Players}, []).
+start_link(Table, Players) ->
+  log("----------------------------"),
+  log("Starting new pokka server..."),
+  log("----------------------------"),
+  gen_fsm:start_link({local, Table}, ?MODULE, #table_state{players = Players}, []).
 
 init(State) -> {ok, idle, State}.
 
@@ -54,11 +58,14 @@ deal_pocket_cards([Player|Players]) ->
 
 send_command(Command, #player{pid=Pid, name=Name}) ->
   gen_server:cast(Pid, {command, Command}),
-  io:format("COMMAND -> ~p: ~p~n",[Name, Command]).
+  log("COMMAND -> " ++ Name ++ ": " ++ Command).
 
 send_info(_Info, []) -> ok;
 
 send_info(Info, [#player{pid=Pid, name=Name}|Players]) ->
   gen_server:cast(Pid, {info, Info}),
-  io:format("INFO -> ~p: ~p~n",[Name, Info]),
+  log("INFO -> " ++ Name ++ ": " ++ Info),
   send_info(Info, Players).
+
+log(Message) ->
+  file:write_file(?LOG_FILE, io_lib:fwrite("~p.\n", [Message]), [append]).
