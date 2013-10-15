@@ -1,81 +1,148 @@
 -module(pokka_player).
--behaviour(gen_fsm).
+-behaviour(gen_server).
+-include("pokka.hrl").
+
+%% API
 -export([start_link/2]).
--export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
--export([startup/2, join/2, cards/2]).
 
+%% gen_server callbacks
+-export([init/1,
+  handle_call/3,
+  handle_cast/2,
+  handle_info/2,
+  terminate/2,
+  code_change/3]).
+
+%%%===================================================================
+%%% API
+%%%===================================================================
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Starts the server
+%%
+%% @spec start_link(Socket, Table) -> {ok, Pid} | ignore | {error, Error}
+%% @end
+%%--------------------------------------------------------------------
 start_link(Socket, Table) ->
-  gen_fsm:start_link(?MODULE, [Socket, Table], []).
+  gen_server:start_link(?MODULE, [Socket, Table], []).
 
-init(StateData) ->
-  gen_fsm:send_event(self(), accept),
-  {ok, startup, StateData}.
+%%%===================================================================
+%%% gen_server callbacks
+%%%===================================================================
 
-startup(accept, [ListenSocket, Table]) ->
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Initializes the server
+%%
+%% @spec init(Args) -> {ok, State} |
+%%                     {ok, State, Timeout} |
+%%                     ignore |
+%%                     {stop, Reason}
+%% @end
+%%--------------------------------------------------------------------
+init([Socket, Table]) ->
+  gen_server:cast(self(), accept),
+  {ok, #player_state{socket=Socket, table=Table}}.
+
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling call messages
+%%
+%% @spec handle_call(Request, From, State) ->
+%%                                   {reply, Reply, State} |
+%%                                   {reply, Reply, State, Timeout} |
+%%                                   {noreply, State} |
+%%                                   {noreply, State, Timeout} |
+%%                                   {stop, Reason, Reply, State} |
+%%                                   {stop, Reason, State}
+%% @end
+%%--------------------------------------------------------------------
+handle_call(_Request, _From, State) ->
+  {noreply, State}.
+
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling cast messages
+%%
+%% @spec handle_cast(Msg, State) -> {noreply, State} |
+%%                                  {noreply, State, Timeout} |
+%%                                  {stop, Reason, State}
+%% @end
+%%--------------------------------------------------------------------
+handle_cast(accept, State = #player_state{socket=ListenSocket}) ->
   {ok, AcceptSocket} = gen_tcp:accept(ListenSocket),
-  send(AcceptSocket, "Hello you! Wanna play some poker?", []),
-  {next_state, join, [AcceptSocket, Table]}.
+  {noreply, State#player_state{socket=AcceptSocket}};
 
-join(_Msg, StateData) ->
-  {next_state, join, StateData}.
+handle_cast({_Type, Message}, State = #player_state{socket=Socket}) ->
+  send(Socket, Message),
+  {noreply, State};
 
-cards(_Msg, StateData) ->
-  {next_state, cards, StateData}.
+handle_cast(_Msg, State) ->
+  erlang:display("i dont know?!?"),
+  {noreply, State}.
 
-handle_event({status, Message}, StateName, StateData = [Socket | _]) ->
-  send(Socket, Message, []),
-  {next_state, StateName, StateData};
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Handling all non call/cast messages
+%%
+%% @spec handle_info(Info, State) -> {noreply, State} |
+%%                                   {noreply, State, Timeout} |
+%%                                   {stop, Reason, State}
+%% @end
+%%--------------------------------------------------------------------
+handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
+  Name = extract_name_from_message(Message),
+  log(Name ++ ": " ++ Message),
+  gen_fsm:send_event(StateData#player_state.table, {join, #player{name=Name, pid=self()}}),
+  {noreply, #player_state{socket=StateData#player_state.socket, table=StateData#player_state.table, name=Name}};
 
-handle_event(_E, StateName, StateData) ->
-  {next_state, StateName, StateData}.
+handle_info(Info, State) ->
+  io:format("unexpected: ~p~n", [Info]),
+  {noreply, State}.
 
-handle_sync_event(_E, _From, StateName, StateData) ->
-  {next_state, StateName, StateData}.
-
-handle_info({tcp, _Port, Msg = "join "++_}, join, [Socket, Table]) ->
-  ["join" | NameString] = tokens(Msg),
-  Name = list_to_atom(string:join(NameString, "_")),
-  Player = {Name, self()},
-  ok = pokka:join_table(Table, Player),
-  send(Socket, "Ok ~p, lets gamble!", [Name]),
-  {next_state, cards, [Socket, Table, Name]};
-
-handle_info({tcp, _Socket, "quit"++_}, join, StateData = [Socket, _Table]) ->
-  gen_tcp:close(Socket),
-  {stop, normal, StateData};
-
-handle_info({tcp, _Socket, "quit"++_}, _StateName, StateData = [Socket, Table, Name]) ->
-  gen_tcp:close(Socket),
-  Player = {Name, self()},
-  pokka:leave_table(Table, Player),
-  {stop, normal, StateData};
-
-handle_info({tcp, _Socket, _Msg}, StateName, StateData = [Socket | _Rest]) ->
-  send(Socket, "sorry?", []),
-  {next_state, StateName, StateData};
-
-handle_info({tcp_closed, _Socket, _}, _StateName, StateData) ->
-  {stop, tcp_closed, StateData};
-
-handle_info({tcp_error, _Socket, _}, _StateName, StateData) ->
-  {stop, tcp_error, StateData};
-
-handle_info(E, StateName, StateData) ->
-  io:format("unexpected: ~p~n", [E]),
-  {next_state, StateName, StateData}.
-
-code_change(_OldVsn, _StateName, StateData, _Extra) ->
-  {ok, StateData}.
-
-terminate(normal, _StateName, _StateData) ->
-  ok;
-
-terminate(_Reason, _StateName, _StateData) ->
-  io:format("terminate reason: ~p~n", [_Reason]).
-
-send(Socket, Str, Args) ->
-  ok = gen_tcp:send(Socket, io_lib:format(Str++"~n", Args)),
-  ok = inet:setopts(Socket, [{active, once}]),
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% This function is called by a gen_server when it is about to
+%% terminate. It should be the opposite of Module:init/1 and do any
+%% necessary cleaning up. When it returns, the gen_server terminates
+%% with Reason. The return value is ignored.
+%%
+%% @spec terminate(Reason, State) -> void()
+%% @end
+%%--------------------------------------------------------------------
+terminate(_Reason, _State) ->
   ok.
 
+%%--------------------------------------------------------------------
+%% @private
+%% @doc
+%% Convert process state when code is changed
+%%
+%% @spec code_change(OldVsn, State, Extra) -> {ok, NewState}
+%% @end
+%%--------------------------------------------------------------------
+code_change(_OldVsn, State, _Extra) ->
+  {ok, State}.
+
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
+send(Socket, Message) ->
+  gen_tcp:send(Socket, Message).
+
 tokens(String) -> string:tokens(String, "\r\n ").
+
+extract_name_from_message(Msg) ->
+  ["JOIN" | NameString] = tokens(Msg),
+  Name = string:join(NameString, "_"),
+  Name.
+
+log(Message) ->
+  file:write_file(?LOG_FILE, io_lib:fwrite("~p.\n", [Message]), [append]).

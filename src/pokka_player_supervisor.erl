@@ -10,7 +10,7 @@ start_link(Table) ->
 init([Table]) ->
   %{ok, Port} = application:get_env(port),
   Port = 12345,
-  {ok, ListenSocket} = gen_tcp:listen(Port, [{active,once}, {packet,line}]),
+  {ok, ListenSocket} = gen_tcp:listen(Port, [{active,once}, {packet,line}, {reuseaddr, true}]),
   spawn_link(fun empty_listeners/0),
   {
     ok,
