@@ -15,7 +15,9 @@ start_link(Table, Players) ->
   log("----------------------------"),
   gen_fsm:start_link({local, Table}, ?MODULE, #table_state{players = Players}, []).
 
-init(State) -> {ok, idle, State}.
+init(State) ->
+  process_flag(trap_exit, true),
+  {ok, idle, State}.
 
 idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Players}) ->
   AllPlayers = [Player|Players],

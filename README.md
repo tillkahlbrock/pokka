@@ -7,6 +7,7 @@ TODO
 ----
 
  * Define the protocol
+ * Do error handling
  * kill the test detached processes
  * Implement the game
     * ~~Join a table (with username)~~
