@@ -7,7 +7,7 @@
 
 -export([start_link/2]).
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
--export([idle/2]).
+-export([idle/2, game/2]).
 
 start_link(Table, Players) ->
   log("----------------------------"),
@@ -31,6 +31,11 @@ idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Playe
 
 idle(timeout, StateData = #table_state{players=Players}) ->
   deal_pocket_cards(Players),
+  gen_fsm:send_event(self(), blinds),
+  {next_state, game, StateData}.
+
+game(blinds, StateData = #table_state{players=Players}) ->
+  switch_blinds(Players),
   {next_state, game, StateData}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
@@ -69,3 +74,5 @@ send_info(Info, [#player{pid=Pid, name=Name}|Players]) ->
 
 log(Message) ->
   file:write_file(?LOG_FILE, io_lib:fwrite("~p.\n", [Message]), [append]).
+
+switch_blinds(Players) -> ok.
