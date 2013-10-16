@@ -7,13 +7,15 @@ TODO
 ----
 
  * Define the protocol
- * kill the test detached processes
+ * Do error handling
+ * ~~kill the detached test processes~~
+  * by pid, within run.sh
  * Implement the game
     * ~~Join a table (with username)~~
     * ~~Start a game when at least 2 players joined~~
     * ~~Deal pocket cards~~
     * Create an order for the current game (who's turn is it?)
-    * Determine blinds order
+    * Determine blinds order / shift blinds after played hand
     * Implemt pot
     * Ask player for action (with possibilities)
     * Process player actions

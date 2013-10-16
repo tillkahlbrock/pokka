@@ -1,3 +1,5 @@
 #!/bin/sh
 
-erl -pa /home/till/src/pokka/ebin -sname pokka -s pokka_app stop
+erl -pa /home/till/src/pokka/ebin -s pokka_app stop -noshell -detached
+sleep 3
+killall beam.smp
