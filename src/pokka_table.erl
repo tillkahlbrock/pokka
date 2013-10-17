@@ -36,9 +36,10 @@ idle(timeout, StateData = #table_state{players=Players}) ->
   gen_fsm:send_event(self(), blinds),
   {next_state, game, StateData}.
 
-game(blinds, StateData = #table_state{players=Players}) ->
-  switch_blinds(Players),
-  {next_state, game, StateData}.
+game(blinds, StateData = #table_state{players=Players, blinds=Blinds}) ->
+  NewBlinds = switch_blinds(Blinds, length(Players)),
+  demand_blinds(NewBlinds, Players),
+  {next_state, game, StateData#table_state{blinds=NewBlinds}}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
@@ -63,9 +64,11 @@ deal_pocket_cards([Player|Players]) ->
   ok = send_command(Message, Player),
   deal_pocket_cards(Players).
 
+-spec(send_command/2:: (string(), #player{}) -> 'ok').
 send_command(Command, #player{pid=Pid, name=Name}) ->
   gen_server:cast(Pid, {command, Command}),
-  log("COMMAND -> " ++ Name ++ ": " ++ Command).
+  log("COMMAND -> " ++ Name ++ ": " ++ Command),
+  ok.
 
 send_info(_Info, []) -> ok;
 
@@ -77,4 +80,10 @@ send_info(Info, [#player{pid=Pid, name=Name}|Players]) ->
 log(Message) ->
   file:write_file(?LOG_FILE, io_lib:fwrite("~p.\n", [Message]), [append]).
 
-switch_blinds(Players) -> ok.
+switch_blinds(Blinds, PlayersCount) -> [(Blind + 1) rem (PlayersCount + 1) || Blind <- Blinds].
+
+demand_blinds([SBIndex, BBIndex], Players) ->
+  SmallBlind = lists:nth(SBIndex, Players),
+  BigBlind = lists:nth(BBIndex, Players),
+  send_command("SMALLBLIND 50", SmallBlind),
+  send_command("BIGBLIND 100", BigBlind).

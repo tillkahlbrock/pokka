@@ -1,4 +1,4 @@
--record(player, {name, pid, blind}).
+-record(player, {name, pid}).
 -record(player_state, {socket, name, table}).
--record(table_state, {players = [], messages = []}).
+-record(table_state, {players = [], messages = [], blinds=[0,1]}).
 -define(LOG_FILE, "/tmp/pokka.log").
