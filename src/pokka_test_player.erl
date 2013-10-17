@@ -16,7 +16,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {socket}).
 
 %%%===================================================================
 %%% API
@@ -55,7 +55,7 @@ init([Name]) ->
   Socket = connect(),
   send(Socket, "JOIN " ++ Name ++ "\n"),
   io:format("I send: JOIN ~s~n", [Name]),
-  {ok, state_name, #state{}}.
+  {ok, state_name, #state{socket=Socket}}.
 
 %%--------------------------------------------------------------------
 %% @private
@@ -146,8 +146,15 @@ handle_sync_event(_Event, _From, StateName, State) ->
 %%                   {stop, Reason, NewState}
 %% @end
 %%--------------------------------------------------------------------
-handle_info({tcp, _Port, Msg = "POCKETCARDS" ++ _}, StateName, State) ->
-  io:format("Pocketcards: ~s~n", [Msg]),
+handle_info({tcp, _Port, "POCKETCARDS" ++ _}, StateName, State) ->
+  {next_state, StateName, State};
+
+handle_info({tcp, _Port, Msg = "BIGBLIND" ++ _}, StateName, State = #state{socket=Socket}) ->
+  send(Socket, Msg),
+  {next_state, StateName, State};
+
+handle_info({tcp, _Port, Msg = "SMALLBLIND" ++ _}, StateName, State = #state{socket=Socket}) ->
+  send(Socket, Msg),
   {next_state, StateName, State};
 
 handle_info(stop, _StateName, State) ->
