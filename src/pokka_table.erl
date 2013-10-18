@@ -21,7 +21,7 @@ init(State) ->
 
 idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Players}) ->
   AllPlayers = [Player|Players],
-  Info = "New player " ++ Name ++ " has joined.\n",
+  Info = "New player " ++ Name ++ " has joined",
   ok = send_info(Info, AllPlayers),
   NewStateData = StateData#table_state{players = AllPlayers},
   case length(AllPlayers) of

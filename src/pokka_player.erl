@@ -145,7 +145,7 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 send(Socket, Message) ->
-  gen_tcp:send(Socket, Message),
+  gen_tcp:send(Socket, Message ++ "\r\n"),
   inet:setopts(Socket, [{active, once}]).
 
 tokens(String) -> string:tokens(String, "\r\n ").
