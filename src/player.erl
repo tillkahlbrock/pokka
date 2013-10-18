@@ -16,9 +16,9 @@ start(Name) -> spawn(fun() -> play(#state{name=Name}) end).
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-play(State = #state{name=Name}) ->
+play(#state{name=Name}) ->
   Socket = connect(),
-  send(Socket, "JOIN " ++ Name ++ "\n"),
+  send(Socket, "JOIN " ++ Name ++ "\r\n"),
   PocketCards = wait_for_pocketcards(),
   io:format("got: ~p~n", [PocketCards]).
 

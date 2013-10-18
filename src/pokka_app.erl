@@ -10,7 +10,7 @@ stop() ->
   pokka_app ! stop.
 
 start_player(Name) ->
-  spawn(pokka_test_player, start_link, [Name]).
+  spawn(player, start, [Name]).
 
 
 loop() ->
