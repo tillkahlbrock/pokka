@@ -102,14 +102,9 @@ handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
   gen_fsm:send_event(StateData#player_state.table, {join, #player{name=Name, pid=self()}}),
   {noreply, StateData#player_state{name=Name}};
 
-handle_info({tcp, _Port, Message = "SMALLBLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
+handle_info({tcp, _Port, Message = "BLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
   log(Name ++ ": " ++ Message),
-  gen_fsm:send_event(Table, {smallblind, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
-  {noreply, StateData};
-
-handle_info({tcp, _Port, Message = "BIGBLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
-  log(Name ++ ": " ++ Message),
-  gen_fsm:send_event(Table, {bigblind, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
+  gen_fsm:send_event(Table, {blind, Name, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
   {noreply, StateData};
 
 handle_info(Info, State) ->

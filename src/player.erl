@@ -34,14 +34,13 @@ wait_for_pocketcards() ->
 
 wait_for_blind(Socket) ->
   receive
-    {tcp, Socket, <<"BIGBLIND ", BigBinary/binary>>} ->
-      BigAmount = string:strip(string:strip(binary_to_list(BigBinary), right, $\n), right, $\r),
-      send(Socket, "BIGBLIND " ++ BigAmount);
-
-    {tcp, Socket, <<"SMALLBLIND ", SmallBinary/binary>>} ->
-      SmallAmount = string:strip(string:strip(binary_to_list(SmallBinary), right, $\n), right, $\r),
-      send(Socket, "SMALLBLIND " ++ SmallAmount)
+    {tcp, Socket, <<"BLIND ", AmountBinary/binary>>} ->
+      Amount = strip_line_endings(AmountBinary),
+      send(Socket, "BLIND " ++ Amount)
   end.
+
+strip_line_endings(AmountBinary) ->
+  string:strip(string:strip(binary_to_list(AmountBinary), right, $\n), right, $\r).
 
 send(Socket, Message) ->
   gen_tcp:send(Socket, Message ++ "\r\n").
