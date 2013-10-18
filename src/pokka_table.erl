@@ -9,6 +9,9 @@
 -export([init/1, handle_event/3, handle_sync_event/4, handle_info/3, terminate/3, code_change/4]).
 -export([idle/2, game/2]).
 
+%%%===================================================================
+%%% API
+%%%===================================================================
 start_link(Table, Players) ->
   log("----------------------------"),
   log("Starting new pokka server..."),
@@ -19,6 +22,9 @@ init(State) ->
   process_flag(trap_exit, true),
   {ok, idle, State}.
 
+%%%===================================================================
+%%% state callbacks
+%%%===================================================================
 idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Players}) ->
   AllPlayers = [Player|Players],
   Info = "New player " ++ Name ++ " has joined",
@@ -45,6 +51,9 @@ game({received_blind, PlayerName, Amount}, StateData) ->
   log("Table: Got blind: " ++ Amount ++ " from " ++ PlayerName),
   {next_state, game, StateData}.
 
+%%%===================================================================
+%%% OTP callbacks
+%%%===================================================================
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
 handle_sync_event(history, _From, StateName, State) ->
@@ -60,6 +69,9 @@ terminate(_Reason, _StateName, _State) -> log("Table: Shutting down...").
 
 code_change(_OldVersion, StateName, State, _Extra) -> {ok, StateName, State}.
 
+%%%===================================================================
+%%% Internal functions
+%%%===================================================================
 deal_pocket_cards([]) -> ok;
 
 deal_pocket_cards([Player|Players]) ->

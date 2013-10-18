@@ -12,7 +12,6 @@ stop() ->
 start_player(Name) ->
   spawn(player, start, [Name]).
 
-
 loop() ->
   receive
     stop -> application:stop(pokka);
