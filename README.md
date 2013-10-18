@@ -9,7 +9,7 @@ TODO
  * Define the protocol
  * Do error handling
  * ~~kill the detached test processes~~
-  * by pid, within run.sh
+  * by pid, ~~within run.sh~~
  * Implement the game
     * ~~Join a table (with username)~~
     * ~~Start a game when at least 2 players joined~~
