@@ -33,15 +33,15 @@ idle({join, Player = #player{name=Name}}, StateData = #table_state{players=Playe
 
 idle(timeout, StateData = #table_state{players=Players}) ->
   deal_pocket_cards(Players),
-  gen_fsm:send_event(self(), blinds),
+  gen_fsm:send_event(self(), pocket_cards_dealed),
   {next_state, game, StateData}.
 
-game(blinds, StateData = #table_state{players=Players, blinds=Blinds}) ->
+game(pocket_cards_dealed, StateData = #table_state{players=Players, blinds=Blinds}) ->
   NewBlinds = switch_blinds(Blinds, length(Players)),
   demand_blinds(NewBlinds, Players),
   {next_state, game, StateData#table_state{blinds=NewBlinds}};
 
-game({blind, PlayerName, Amount}, StateData) ->
+game({received_blind, PlayerName, Amount}, StateData) ->
   log("Table: Got blind: " ++ Amount ++ " from " ++ PlayerName),
   {next_state, game, StateData}.
 

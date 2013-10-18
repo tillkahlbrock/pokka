@@ -104,7 +104,7 @@ handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
 
 handle_info({tcp, _Port, Message = "BLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
   log(Name ++ ": " ++ Message),
-  gen_fsm:send_event(Table, {blind, Name, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
+  gen_fsm:send_event(Table, {received_blind, Name, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
   {noreply, StateData};
 
 handle_info(Info, State) ->
