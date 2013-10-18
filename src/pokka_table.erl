@@ -39,7 +39,15 @@ idle(timeout, StateData = #table_state{players=Players}) ->
 game(blinds, StateData = #table_state{players=Players, blinds=Blinds}) ->
   NewBlinds = switch_blinds(Blinds, length(Players)),
   demand_blinds(NewBlinds, Players),
-  {next_state, game, StateData#table_state{blinds=NewBlinds}}.
+  {next_state, game, StateData#table_state{blinds=NewBlinds}};
+
+game({bigblind, Amount}, StateData) ->
+  log("Table: Got Bigblind: " ++ Amount),
+  {next_state, game, StateData};
+
+game({smallblind, Amount}, StateData) ->
+  log("Table: Got Smallblind: " ++ Amount),
+  {next_state, game, StateData}.
 
 handle_event(_Event, StateName, State) -> {next_state, StateName, State}.
 
@@ -85,5 +93,5 @@ switch_blinds(Blinds, PlayersCount) -> [(Blind + 1) rem (PlayersCount + 1) || Bl
 demand_blinds([SBIndex, BBIndex], Players) ->
   SmallBlind = lists:nth(SBIndex, Players),
   BigBlind = lists:nth(BBIndex, Players),
-  send_command("SMALLBLIND 50", SmallBlind),
-  send_command("BIGBLIND 100", BigBlind).
+  send_command("BIGBLIND 100", BigBlind),
+  send_command("SMALLBLIND 50", SmallBlind).

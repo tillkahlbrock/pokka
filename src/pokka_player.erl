@@ -100,10 +100,20 @@ handle_info({tcp, _Port, Message = "JOIN "++_}, StateData) ->
   Name = extract_name_from_message(Message),
   log(Name ++ ": " ++ Message),
   gen_fsm:send_event(StateData#player_state.table, {join, #player{name=Name, pid=self()}}),
-  {noreply, #player_state{socket=StateData#player_state.socket, table=StateData#player_state.table, name=Name}};
+  {noreply, StateData#player_state{name=Name}};
+
+handle_info({tcp, _Port, Message = "SMALLBLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
+  log(Name ++ ": " ++ Message),
+  gen_fsm:send_event(Table, {smallblind, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
+  {noreply, StateData};
+
+handle_info({tcp, _Port, Message = "BIGBLIND "++Amount}, StateData = #player_state{name=Name, table=Table}) ->
+  log(Name ++ ": " ++ Message),
+  gen_fsm:send_event(Table, {bigblind, string:strip(string:strip(Amount, right, $\n), right, $\r)}),
+  {noreply, StateData};
 
 handle_info(Info, State) ->
-  io:format("unexpected: ~p~n", [Info]),
+  log(io_lib:format("unexpected: ~p~n", [Info])),
   {noreply, State}.
 
 %%--------------------------------------------------------------------
@@ -135,7 +145,8 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 send(Socket, Message) ->
-  gen_tcp:send(Socket, Message).
+  gen_tcp:send(Socket, Message),
+  inet:setopts(Socket, [{active, once}]).
 
 tokens(String) -> string:tokens(String, "\r\n ").
 
