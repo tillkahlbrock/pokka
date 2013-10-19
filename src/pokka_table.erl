@@ -20,6 +20,7 @@ start_link(Table, Players) ->
 
 init(State) ->
   process_flag(trap_exit, true),
+  pokka_pot:start(),
   {ok, idle, State}.
 
 %%%===================================================================
@@ -47,8 +48,10 @@ game(pocket_cards_dealed, StateData = #table_state{players=Players, blinds=Blind
   demand_blinds(NewBlinds, Players),
   {next_state, game, StateData#table_state{blinds=NewBlinds}};
 
-game({received_blind, PlayerName, Amount}, StateData) ->
+game({received_blind, PlayerName, Amount}, StateData = #table_state{players=Players}) ->
   log("Table: Got blind: " ++ Amount ++ " from " ++ PlayerName),
+  pokka_pot:put(list_to_integer(Amount)),
+  send_info("Pot size: " + integer_to_list(pokka_pot:size()), Players),
   {next_state, game, StateData}.
 
 %%%===================================================================
